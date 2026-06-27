@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#a96b7d" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Cosy Progress Club" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
-  <title>Cosy Progress Club</title>
+  <title>Cosy Progress Club v1.3</title>
+  <!-- Cosy Progress Club v1.3: modal and alignment fixes -->
   <style>
     :root{
       --rose:#a96b7d; --rose2:#dba4b3; --blush:#f7e8ed; --cream:#fffaf4;
@@ -48,7 +50,8 @@
     .vanessa-photo{
       width:104px;height:128px;object-fit:cover;border-radius:32px;
       border:4px solid rgba(255,255,255,.85);
-      box-shadow:0 8px 18px rgba(74,48,57,.16);display:block;
+      box-shadow:0 8px 18px rgba(74,48,57,.16);
+      display:block;
     }
     .progress-wrap{margin-top:12px}
     .progress{height:12px;background:#eadfe3;border-radius:999px;overflow:hidden}
@@ -138,7 +141,7 @@
           </div>
         </div>
         <div style="text-align:center">
-          <img src="vanessa.png?v=3" alt="Vanessa" class="vanessa-photo">
+          <img src="vanessa.png?v=4" alt="Vanessa" class="vanessa-photo">
           <div class="muted" style="margin-top:5px;font-weight:800">Vanessa</div>
         </div>
       </div>
@@ -260,10 +263,10 @@
   <button class="tab" data-page="summary"><span>✨</span>Summary</button>
 </nav>
 
-<dialog id="taskDialog"><form method="dialog" class="modal" id="taskForm">
+<dialog id="taskDialog"><div class="modal" id="taskForm">
   <h3>Add a goal</h3>
   <div class="stack">
-    <div><label>Goal</label><input id="taskName" required placeholder="What would you like to do?"></div>
+    <div><label>Goal</label><input id="taskName" placeholder="What would you like to do?"></div>
     <div class="grid2">
       <div><label>Category</label><select id="taskCategory"><option>Academic</option><option>Fitness</option><option>Money</option><option>Personal</option></select></div>
       <div><label>Goal level</label><select id="taskLevel"><option>Essential</option><option>Ideal</option><option>Bonus</option></select></div>
@@ -273,13 +276,13 @@
     <div><label>Gentler alternative (optional)</label><input id="taskGentle" placeholder="e.g. 10-minute walk instead"></div>
   </div>
   <div class="modal-actions"><button class="btn ghost" id="cancelTask" type="button">Cancel</button><button class="btn" id="saveTask" type="button">Add</button></div>
-</form></dialog>
+</div></dialog>
 
-<dialog id="eventDialog"><form method="dialog" class="modal">
+<dialog id="eventDialog"><div class="modal">
   <h3>Add an agenda item</h3>
   <div class="stack"><div><label>Time</label><input id="eventTime" type="time"></div><div><label>Event</label><input id="eventName" placeholder="e.g. lab meeting"></div></div>
   <div class="modal-actions"><button class="btn ghost" id="cancelEvent" type="button">Cancel</button><button class="btn" id="saveEvent" type="button">Add</button></div>
-</form></dialog>
+</div></dialog>
 
 <script>
 const todayKey = () => new Date().toISOString().slice(0,10);
@@ -393,14 +396,14 @@ document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>document.getEl
 document.getElementById("dayType").onchange=e=>{data.dayTypes[todayKey()]=e.target.value;save()}
 document.getElementById("cycleStatus").onchange=e=>{data.cycle[todayKey()]=e.target.value;save()}
 document.getElementById("weekDayType").onchange=e=>{data.dayTypes[selectedDate]=e.target.value;save()}
-document.getElementById("saveTask").onclick=()=>{
+document.getElementById("saveTask").addEventListener("click",(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
   const nameEl=document.getElementById("taskName");
   const name=nameEl.value.trim();
   if(!name){
+    alert("Please enter a goal.");
     nameEl.focus();
-    nameEl.setCustomValidity("Please enter a goal.");
-    nameEl.reportValidity();
-    nameEl.setCustomValidity("");
     return;
   }
   const t={
@@ -414,30 +417,49 @@ document.getElementById("saveTask").onclick=()=>{
   };
   data.tasks[taskTargetDate]=data.tasks[taskTargetDate]||[];
   data.tasks[taskTargetDate].push(t);
+
   document.getElementById("taskDialog").close();
-  document.getElementById("taskForm").reset();
+
+  nameEl.value="";
+  document.getElementById("taskCategory").value="Academic";
+  document.getElementById("taskLevel").value="Essential";
+  document.getElementById("taskDifficulty").value="1";
+  document.getElementById("taskFlexible").value="true";
+  document.getElementById("taskGentle").value="";
   save();
-}
-document.getElementById("cancelTask").onclick=()=>{
+});
+
+document.getElementById("cancelTask").addEventListener("click",(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
   document.getElementById("taskDialog").close();
-}
-document.getElementById("saveEvent").onclick=()=>{
+});
+document.getElementById("saveEvent").addEventListener("click",(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
   const nameEl=document.getElementById("eventName");
   const n=nameEl.value.trim();
-  if(!n){nameEl.focus();return;}
+  if(!n){
+    alert("Please enter an event.");
+    nameEl.focus();
+    return;
+  }
   data.events[todayKey()]=data.events[todayKey()]||[];
   data.events[todayKey()].push({
     time:document.getElementById("eventTime").value,
     name:n
   });
   document.getElementById("eventDialog").close();
-  document.getElementById("eventName").value="";
+  nameEl.value="";
   document.getElementById("eventTime").value="";
   save();
-}
-document.getElementById("cancelEvent").onclick=()=>{
+});
+
+document.getElementById("cancelEvent").addEventListener("click",(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
   document.getElementById("eventDialog").close();
-}
+});
 document.getElementById("addSelectedTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
 document.getElementById("addWeeklyTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
 document.getElementById("copyYesterday").onclick=()=>{let d=new Date(selectedDate+"T12:00:00");d.setDate(d.getDate()-1);let pk=keyOf(d);data.tasks[selectedDate]=(data.tasks[pk]||[]).map(t=>({...t,done:false}));save()}
