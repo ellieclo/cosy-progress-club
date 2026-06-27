@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-title" content="Cosy Progress Club" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
-  <title>Cosy Progress Club v2.1</title>
-  <!-- Cosy Progress Club v2.1 -->
+  <title>Cosy Progress Club v2.2</title>
+  <!-- Cosy Progress Club v2.2 -->
   <style>
     :root{
       --rose:#a96b7d; --rose2:#dba4b3; --blush:#f7e8ed; --cream:#fffaf4;
@@ -139,7 +139,19 @@
     .month-total{font-size:1.6rem;font-weight:900}
     .reading-card{display:grid;gap:8px}
     .reading-meta{display:flex;gap:6px;flex-wrap:wrap}
+
     .session-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
+    .journey-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+    .journey-stat{padding:12px;border-radius:16px;background:#fff;border:1px solid var(--line);text-align:center}
+    .journey-stat strong{display:block;font-size:1.35rem}
+    .journey-track{height:18px;background:#eadfe3;border-radius:999px;overflow:hidden}
+    .journey-track > div{height:100%;background:linear-gradient(90deg,var(--sage),var(--rose2),var(--rose));transition:.4s}
+    .activity-chart{display:grid;grid-template-columns:repeat(14,1fr);gap:5px;align-items:end;height:120px;padding-top:12px}
+    .activity-bar{min-height:5px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--rose2),var(--rose));position:relative}
+    .activity-bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.62rem;color:var(--muted);white-space:nowrap}
+    .journey-message{padding:13px;border-radius:16px;background:linear-gradient(135deg,#f5e7ed,#edf2e9);border:1px solid var(--line)}
+    @media(max-width:520px){.journey-grid{grid-template-columns:repeat(2,1fr)}}
+
 
 
     .hidden{display:none!important}
@@ -322,6 +334,28 @@
     </section>
 
     <section id="summary" class="page">
+      <div class="section-title"><h3>Progress journey</h3></div>
+      <div class="card stack">
+        <div class="journey-grid">
+          <div class="journey-stat"><span class="muted">Started</span><strong id="journeyStarted">—</strong></div>
+          <div class="journey-stat"><span class="muted">Active days</span><strong id="journeyActiveDays">0</strong></div>
+          <div class="journey-stat"><span class="muted">Current streak</span><strong id="journeyCurrentStreak">0</strong></div>
+          <div class="journey-stat"><span class="muted">Longest streak</span><strong id="journeyLongestStreak">0</strong></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:6px">
+            <span class="muted">Lifetime progress</span><strong id="journeyLevelLabel">Level 1</strong>
+          </div>
+          <div class="journey-track"><div id="journeyTrackFill"></div></div>
+          <div class="muted" id="journeyPointsText" style="margin-top:6px"></div>
+        </div>
+        <div>
+          <strong>Last 14 days</strong>
+          <div class="activity-chart" id="activityChart"></div>
+        </div>
+        <div class="journey-message" id="journeyMessage"></div>
+      </div>
+
       <div class="section-title"><h3>Your progress</h3></div>
       <div class="grid2">
         <div class="metric"><span class="muted">Goals completed</span><strong id="sumGoals">0</strong></div>
@@ -592,6 +626,111 @@ function readingGroupsForMonth(month=currentMonth()){
   return {entries,counts};
 }
 
+
+function activityDates(){
+  const dates=new Set();
+
+  for(const [date,tasks] of Object.entries(data.tasks||{})){
+    if(tasks.some(t=>t.done))dates.add(date);
+  }
+  for(const x of data.fitness||[])if(x.date)dates.add(x.date);
+  for(const x of data.strength||[])if(x.date)dates.add(x.date);
+  for(const x of data.focus||[])if(x.date)dates.add(x.date);
+  for(const x of data.purchases||[])if(x.date)dates.add(x.date);
+  for(const x of data.readings||[])if(x.date)dates.add(x.date);
+
+  return [...dates].sort();
+}
+function pointsForDate(date){
+  let points=0;
+  for(const t of (data.tasks?.[date]||[]))if(t.done)points+=weights[t.difficulty]||0;
+  points+=(data.fitness||[]).filter(x=>x.date===date).length*4;
+  points+=(data.strength||[]).filter(x=>x.date===date).length*4;
+  points+=(data.focus||[]).filter(x=>x.date===date).reduce((a,x)=>a+Math.max(1,Math.floor(Number(x.minutes||0)/15)),0);
+  points+=(data.readings||[]).filter(x=>x.date===date).length*3;
+  return points;
+}
+function streakStats(dates){
+  if(!dates.length)return {current:0,longest:0};
+  const set=new Set(dates);
+  let longest=0,run=0,prev=null;
+  for(const k of dates){
+    const d=parseLocal(k);
+    if(prev){
+      const diff=Math.round((d-prev)/86400000);
+      run=diff===1?run+1:1;
+    }else run=1;
+    longest=Math.max(longest,run);
+    prev=d;
+  }
+
+  let current=0;
+  let cursor=parseLocal(todayKey());
+  while(set.has(keyOf(cursor))){
+    current++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  if(current===0){
+    cursor=parseLocal(todayKey());
+    cursor.setDate(cursor.getDate()-1);
+    while(set.has(keyOf(cursor))){
+      current++;
+      cursor.setDate(cursor.getDate()-1);
+    }
+  }
+  return {current,longest};
+}
+function totalLifetimePoints(){
+  let points=0;
+  for(const [date,tasks] of Object.entries(data.tasks||{})){
+    for(const t of tasks)if(t.done)points+=weights[t.difficulty]||0;
+  }
+  points+=(data.fitness||[]).length*4;
+  points+=(data.strength||[]).length*4;
+  points+=(data.focus||[]).reduce((a,x)=>a+Math.max(1,Math.floor(Number(x.minutes||0)/15)),0);
+  points+=(data.readings||[]).length*3;
+  return points;
+}
+function renderJourney(){
+  const dates=activityDates();
+  const stats=streakStats(dates);
+  journeyStarted.textContent=dates.length
+    ? parseLocal(dates[0]).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})
+    : "Not yet";
+  journeyActiveDays.textContent=dates.length;
+  journeyCurrentStreak.textContent=stats.current;
+  journeyLongestStreak.textContent=stats.longest;
+
+  const points=totalLifetimePoints();
+  const level=Math.floor(points/50)+1;
+  const intoLevel=points%50;
+  journeyLevelLabel.textContent=`Level ${level}`;
+  journeyTrackFill.style.width=`${intoLevel/50*100}%`;
+  journeyPointsText.textContent=`${points} total progress points · ${50-intoLevel} points to Level ${level+1}`;
+
+  const bars=[];
+  let max=1;
+  for(let i=13;i>=0;i--){
+    const d=parseLocal(todayKey());
+    d.setDate(d.getDate()-i);
+    const k=keyOf(d);
+    const p=pointsForDate(k);
+    max=Math.max(max,p);
+    bars.push({k,p,label:d.toLocaleDateString(undefined,{weekday:"narrow"})});
+  }
+  activityChart.innerHTML=bars.map(x=>{
+    const h=x.p?Math.max(12,(x.p/max)*92):5;
+    return `<div class="activity-bar" title="${fmtDate(x.k)}: ${x.p} points" style="height:${h}px;opacity:${x.p?1:.22}"><span>${x.label}</span></div>`;
+  }).join("");
+
+  let message="Your journey begins with the first completed action.";
+  if(points>=1)message="You have started building evidence of your progress. Small inputs are accumulating.";
+  if(points>=50)message="You have completed your first full progress level. Your consistency is becoming visible.";
+  if(points>=150)message="Your record now shows sustained effort across multiple parts of your life.";
+  if(stats.current>=7)message=`You are on a ${stats.current}-day active streak. Consistency is doing the heavy lifting.`;
+  journeyMessage.textContent=message;
+}
+
 function renderSummary(){
   const all=Object.values(data.tasks).flat();
   sumGoals.textContent=all.filter(t=>t.done).length;
@@ -611,7 +750,7 @@ function renderSummary(){
   shopList.innerHTML=data.shop.map(x=>`<div class="shop-item"><div><span style="font-size:1.5rem">${x.icon}</span> <strong>${x.name}</strong></div>${data.owned.includes(x.id)?`<span class="tag ideal">Owned</span>`:`<button class="btn gold small" onclick="buyItem('${x.id}')">${x.cost} coins</button>`}</div>`).join("");
   renderFocusBreakdowns();
 }
-function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderReading();renderMoney();renderSummary()}
+function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderReading();renderMoney();renderSummary();renderJourney()}
 
 window.toggleTask=(k,i)=>{const t=data.tasks[k][i];data.coins=Math.max(0,data.coins+(t.done?-weights[t.difficulty]:weights[t.difficulty]));t.done=!t.done;save()}
 window.deleteTask=(k,i)=>{data.tasks[k].splice(i,1);save()}
