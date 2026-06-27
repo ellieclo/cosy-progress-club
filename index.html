@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#a96b7d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Cosy Progress Club" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Cosy Progress Club</title>
+  <style>
+    :root{
+      --rose:#a96b7d; --rose2:#dba4b3; --blush:#f7e8ed; --cream:#fffaf4;
+      --sage:#9aa990; --sage2:#e8eee4; --lav:#b9a6c8; --gold:#d3a74f;
+      --ink:#46383d; --muted:#7b6d72; --card:#fffdf9; --line:#eadde1;
+      --shadow:0 10px 30px rgba(84,58,66,.10);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont,
+      "Segoe UI", sans-serif; color:var(--ink);
+      background:
+        radial-gradient(circle at top left, #f8dce5 0, transparent 34%),
+        radial-gradient(circle at top right, #e7eadb 0, transparent 30%),
+        linear-gradient(180deg,#fff8f8 0%,#fffaf4 60%,#f4eee8 100%);
+      min-height:100vh;
+    }
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:860px;margin:0 auto;padding:16px 14px 110px}
+    .topbar{
+      position:sticky;top:0;z-index:30;padding:calc(10px + env(safe-area-inset-top)) 0 10px;
+      backdrop-filter:blur(14px); background:rgba(255,250,244,.78);
+      display:flex;justify-content:space-between;align-items:center;
+    }
+    .brand h1{font-size:1.25rem;margin:0}.brand small{color:var(--muted)}
+    .coin-pill{background:#fff4d8;border:1px solid #efd69b;padding:8px 12px;border-radius:999px;font-weight:800}
+    .hero{
+      display:grid;grid-template-columns:1fr 112px;gap:14px;align-items:center;
+      background:linear-gradient(135deg,#fffdf9,#f7e7ed);
+      border:1px solid var(--line);border-radius:28px;padding:18px;box-shadow:var(--shadow);
+    }
+    .hero h2{margin:0 0 5px;font-size:1.45rem}
+    .hero p{margin:4px 0;color:var(--muted)}
+    .vanessa{
+      width:104px;height:128px;border-radius:50px 50px 28px 28px;
+      background:linear-gradient(180deg,#f1d5bd 0 44%,#8f5f70 44% 100%);
+      position:relative;overflow:hidden;border:4px solid rgba(255,255,255,.85);
+      box-shadow:0 8px 18px rgba(74,48,57,.16)
+    }
+    .hair{position:absolute;left:16px;top:8px;width:72px;height:78px;background:#2d2528;border-radius:48% 52% 44% 48%}
+    .face{position:absolute;left:30px;top:23px;width:45px;height:53px;background:#c88967;border-radius:44% 44% 48% 48%}
+    .hair::after{content:"";position:absolute;left:-6px;top:32px;width:85px;height:78px;border:11px solid #2d2528;border-top:0;border-radius:0 0 44px 44px}
+    .eyes{position:absolute;left:11px;top:20px;width:23px;height:5px;border-top:2px solid #3e2c2a;border-radius:50%}
+    .smile{position:absolute;left:14px;top:35px;width:17px;height:8px;border-bottom:2px solid #7b403e;border-radius:50%}
+    .progress-wrap{margin-top:12px}
+    .progress{height:12px;background:#eadfe3;border-radius:999px;overflow:hidden}
+    .progress > div{height:100%;background:linear-gradient(90deg,var(--rose2),var(--rose));width:0%;transition:.3s}
+    .section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 10px}
+    .section-title h3{margin:0;font-size:1.02rem}
+    .card{background:rgba(255,253,249,.96);border:1px solid var(--line);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+    .stack{display:grid;gap:10px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .muted{color:var(--muted);font-size:.9rem}
+    .btn{border:0;border-radius:14px;padding:11px 13px;font-weight:800;background:var(--rose);color:white}
+    .btn.secondary{background:var(--sage2);color:#526048}
+    .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+    .btn.gold{background:#f4dfaa;color:#73581f}
+    .btn.small{padding:8px 10px;font-size:.85rem}
+    input,select,textarea{
+      width:100%;border:1px solid var(--line);border-radius:13px;padding:11px;background:#fff;color:var(--ink)
+    }
+    label{font-size:.82rem;font-weight:800;color:var(--muted)}
+    .task{
+      border:1px solid var(--line);border-radius:17px;padding:12px;background:#fff;
+      display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start
+    }
+    .check{
+      width:28px;height:28px;border-radius:10px;border:2px solid var(--rose2);background:white;
+      display:grid;place-items:center;font-weight:900;color:white
+    }
+    .task.done .check{background:var(--rose);border-color:var(--rose)}
+    .task.done .task-name{text-decoration:line-through;opacity:.62}
+    .tag{display:inline-block;padding:4px 7px;border-radius:999px;font-size:.72rem;font-weight:800;margin:4px 4px 0 0}
+    .tag.essential{background:#f7d7df}.tag.ideal{background:#e3eadf}.tag.bonus{background:#eee6f4}
+    .tag.fit{background:#dcecf0}.tag.acad{background:#ece4f5}.tag.money{background:#fff0c9}.tag.personal{background:#f7e2d6}
+    .task-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+    .icon-btn{border:1px solid var(--line);background:white;border-radius:10px;padding:6px 8px}
+    .week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .day-chip{padding:9px 4px;border-radius:14px;border:1px solid var(--line);background:#fff;text-align:center;font-size:.76rem}
+    .day-chip.active{background:var(--rose);color:white}
+    .day-chip strong{display:block;font-size:1rem}
+    .tabs{
+      position:fixed;bottom:0;left:0;right:0;z-index:40;
+      display:grid;grid-template-columns:repeat(6,1fr);
+      background:rgba(255,253,249,.94);backdrop-filter:blur(16px);
+      border-top:1px solid var(--line);padding:7px 6px calc(7px + env(safe-area-inset-bottom));
+    }
+    .tab{border:0;background:transparent;color:var(--muted);font-size:.68rem;padding:5px 2px}
+    .tab span{display:block;font-size:1.15rem}.tab.active{color:var(--rose);font-weight:900}
+    .page{display:none}.page.active{display:block}
+    .metric{padding:12px;border-radius:16px;background:#fff;border:1px solid var(--line)}
+    .metric strong{font-size:1.35rem;display:block}
+    .jar{position:relative;padding:14px;border:1px solid var(--line);border-radius:18px;background:#fff}
+    .jarbar{height:14px;border-radius:999px;background:#eee5d3;overflow:hidden;margin-top:8px}
+    .jarbar > div{height:100%;background:linear-gradient(90deg,#f1d692,#d1a84e)}
+    .shop-item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);padding:12px;border-radius:16px;background:white}
+    .calendar-event{padding:10px;border-left:4px solid var(--lav);background:#fbf7fd;border-radius:10px}
+    .cycle-banner{background:linear-gradient(135deg,#f5dfe7,#eee6f4);border:1px solid #e4cdd7}
+    .notice{padding:11px;border-radius:14px;background:#f9f1d9;border:1px solid #eddca7}
+    dialog{border:0;border-radius:22px;padding:0;max-width:520px;width:calc(100% - 28px);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+    dialog::backdrop{background:rgba(60,42,48,.35)}
+    .modal{padding:18px;background:var(--cream)}
+    .modal h3{margin-top:0}.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .hidden{display:none!important}
+    .empty{text-align:center;padding:22px;color:var(--muted)}
+    .confetti{position:fixed;inset:0;pointer-events:none;z-index:99}
+    @media(max-width:520px){
+      .grid2{grid-template-columns:1fr}.hero{grid-template-columns:1fr 96px}
+      .vanessa{width:88px;height:112px}.tabs{grid-template-columns:repeat(6,1fr)}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><h1>Cosy Progress Club</h1><small>Small steps, real progress.</small></div>
+    <div class="coin-pill">🪙 <span id="coinCount">0</span></div>
+  </header>
+
+  <main>
+    <section id="today" class="page active">
+      <div class="hero">
+        <div>
+          <h2 id="greeting">Good day, Eleanor ✨</h2>
+          <p id="dateLabel"></p>
+          <p><strong id="dayTypeLabel">Choose today’s day type</strong></p>
+          <div class="progress-wrap">
+            <div class="muted"><span id="effortText">0 of 0 effort points</span></div>
+            <div class="progress"><div id="effortBar"></div></div>
+          </div>
+        </div>
+        <div class="vanessa" aria-label="Vanessa, your cosy progress companion">
+          <div class="hair"><div class="face"><div class="eyes"></div><div class="smile"></div></div></div>
+        </div>
+      </div>
+
+      <div class="section-title"><h3>Today’s setup</h3></div>
+      <div class="card stack">
+        <div class="grid2">
+          <div><label>Day type</label><select id="dayType">
+            <option value="">Choose…</option><option>Lab day</option><option>Work-from-home day</option>
+            <option>Social day</option><option>Home day</option>
+          </select></div>
+          <div><label>Cycle status</label><select id="cycleStatus">
+            <option value="none">Not on period</option><option value="1">Period day 1</option>
+            <option value="2">Period day 2</option><option value="3">Period day 3</option>
+            <option value="4">Period day 4+</option>
+          </select></div>
+        </div>
+        <button class="btn secondary" id="gentleBtn">🌙 Suggest gentler goals</button>
+      </div>
+
+      <div class="section-title"><h3>Agenda</h3><button class="btn ghost small" data-open="eventDialog">+ Event</button></div>
+      <div id="agendaList" class="stack"></div>
+
+      <div class="section-title"><h3>Today’s goals</h3><button class="btn small" data-open="taskDialog">+ Goal</button></div>
+      <div id="taskList" class="stack"></div>
+    </section>
+
+    <section id="week" class="page">
+      <div class="section-title"><h3>This week</h3><button class="btn small" id="addWeeklyTask">+ Flexible goal</button></div>
+      <div class="week-strip" id="weekStrip"></div>
+      <div class="card stack" style="margin-top:12px">
+        <div class="muted">Select a day, choose its type, and add goals. Flexible unfinished goals can be moved forward.</div>
+        <div><label>Selected day type</label><select id="weekDayType">
+          <option value="">Choose…</option><option>Lab day</option><option>Work-from-home day</option>
+          <option>Social day</option><option>Home day</option>
+        </select></div>
+        <button class="btn secondary" id="copyYesterday">Copy previous day’s goals</button>
+      </div>
+      <div class="section-title"><h3 id="selectedDateTitle">Selected day</h3><button class="btn small" id="addSelectedTask">+ Goal</button></div>
+      <div id="selectedDayTasks" class="stack"></div>
+    </section>
+
+    <section id="fitness" class="page">
+      <div class="section-title"><h3>Gentle cardio plan</h3></div>
+      <div class="card stack">
+        <div class="notice">Aim for 3–4 sessions weekly. For run-walks, use your Apple Watch and slow to a walk when needed to stay around 140–150 bpm.</div>
+        <div class="grid2">
+          <div><label>Session type</label><select id="fitType"><option>Run-walk</option><option>Active yoga</option><option>Dance</option><option>Other cardio</option></select></div>
+          <div><label>Duration (minutes)</label><input id="fitDuration" type="number" min="1" value="20"></div>
+          <div><label>Average heart rate</label><input id="fitHR" type="number" placeholder="Optional"></div>
+          <div><label>Time in Zone 2 (minutes)</label><input id="fitZone" type="number" placeholder="Optional"></div>
+        </div>
+        <div><label>How did it feel?</label><select id="fitFeel"><option>Comfortable</option><option>Manageable</option><option>Hard</option><option>Stopped early</option></select></div>
+        <button class="btn" id="logFitness">Log session</button>
+      </div>
+      <div class="section-title"><h3>Progression</h3></div>
+      <div class="card">
+        <p><strong id="fitLevel">Gentle Week 1</strong></p>
+        <p class="muted">Suggested run-walk: 5-minute warm-up, then 1 minute easy jogging + 2 minutes walking × 5, followed by a cool-down.</p>
+        <div class="grid2"><button class="btn secondary" id="repeatLevel">Repeat this level</button><button class="btn" id="progressLevel">Progress gently</button></div>
+      </div>
+      <div class="section-title"><h3>Recent sessions</h3></div>
+      <div id="fitnessList" class="stack"></div>
+    </section>
+
+    <section id="academic" class="page">
+      <div class="section-title"><h3>Academic projects</h3><button class="btn small" id="addProject">+ Project</button></div>
+      <div id="projectList" class="stack"></div>
+      <div class="section-title"><h3>Focus log</h3></div>
+      <div class="card stack">
+        <div class="grid2"><div><label>Project/task</label><input id="focusLabel" placeholder="e.g. revise discussion"></div><div><label>Focused minutes</label><input id="focusMinutes" type="number" min="1"></div></div>
+        <button class="btn" id="logFocus">Log focused time</button>
+      </div>
+    </section>
+
+    <section id="money" class="page">
+      <div class="section-title"><h3>Today’s spending</h3></div>
+      <div class="card stack">
+        <div><label>Day classification</label><select id="spendClass"><option>No-spend day</option><option>Transit-only day</option><option>Spending day</option></select></div>
+        <div class="grid2"><div><label>Transit amount ($)</label><input id="transitAmount" type="number" step="0.01" min="0"></div><div><label>Other spending ($)</label><input id="otherAmount" type="number" step="0.01" min="0"></div></div>
+        <button class="btn" id="saveSpending">Save today</button>
+      </div>
+      <div class="section-title"><h3>Savings jars</h3><button class="btn small" id="addJar">+ Jar</button></div>
+      <div id="jarList" class="stack"></div>
+    </section>
+
+    <section id="summary" class="page">
+      <div class="section-title"><h3>Your progress</h3></div>
+      <div class="grid2">
+        <div class="metric"><span class="muted">Goals completed</span><strong id="sumGoals">0</strong></div>
+        <div class="metric"><span class="muted">Effort points</span><strong id="sumPoints">0</strong></div>
+        <div class="metric"><span class="muted">Cardio sessions</span><strong id="sumFitness">0</strong></div>
+        <div class="metric"><span class="muted">Focus minutes</span><strong id="sumFocus">0</strong></div>
+        <div class="metric"><span class="muted">No-spend / transit-only</span><strong id="sumSpend">0</strong></div>
+        <div class="metric"><span class="muted">Saved</span><strong id="sumSaved">$0</strong></div>
+      </div>
+      <div class="section-title"><h3>Vanessa’s room & shop</h3></div>
+      <div class="card stack">
+        <p class="muted">Spend your coins on cosy items. Purchased items stay in Vanessa’s room.</p>
+        <div id="ownedItems"></div>
+        <div id="shopList" class="stack"></div>
+      </div>
+      <div class="section-title"><h3>Backup</h3></div>
+      <div class="card stack">
+        <button class="btn secondary" id="exportData">Export progress backup</button>
+        <label class="btn ghost" style="text-align:center">Import backup<input id="importData" type="file" accept=".json" class="hidden"></label>
+        <button class="btn ghost" id="resetData">Reset all data</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs">
+  <button class="tab active" data-page="today"><span>🏡</span>Today</button>
+  <button class="tab" data-page="week"><span>🗓️</span>Week</button>
+  <button class="tab" data-page="fitness"><span>🏃‍♀️</span>Fitness</button>
+  <button class="tab" data-page="academic"><span>📚</span>Academic</button>
+  <button class="tab" data-page="money"><span>🫙</span>Money</button>
+  <button class="tab" data-page="summary"><span>✨</span>Summary</button>
+</nav>
+
+<dialog id="taskDialog"><form method="dialog" class="modal" id="taskForm">
+  <h3>Add a goal</h3>
+  <div class="stack">
+    <div><label>Goal</label><input id="taskName" required placeholder="What would you like to do?"></div>
+    <div class="grid2">
+      <div><label>Category</label><select id="taskCategory"><option>Academic</option><option>Fitness</option><option>Money</option><option>Personal</option></select></div>
+      <div><label>Goal level</label><select id="taskLevel"><option>Essential</option><option>Ideal</option><option>Bonus</option></select></div>
+      <div><label>Difficulty</label><select id="taskDifficulty"><option value="1">1 — Tiny</option><option value="2">2 — Light</option><option value="3">3 — Moderate</option><option value="4">4 — Challenging</option><option value="5">5 — Major</option></select></div>
+      <div><label>Flexible?</label><select id="taskFlexible"><option value="true">Yes, can move</option><option value="false">No, date-specific</option></select></div>
+    </div>
+    <div><label>Gentler alternative (optional)</label><input id="taskGentle" placeholder="e.g. 10-minute walk instead"></div>
+  </div>
+  <div class="modal-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn" id="saveTask" value="default">Add</button></div>
+</form></dialog>
+
+<dialog id="eventDialog"><form method="dialog" class="modal">
+  <h3>Add an agenda item</h3>
+  <div class="stack"><div><label>Time</label><input id="eventTime" type="time"></div><div><label>Event</label><input id="eventName" placeholder="e.g. lab meeting"></div></div>
+  <div class="modal-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn" id="saveEvent" value="default">Add</button></div>
+</form></dialog>
+
+<script>
+const todayKey = () => new Date().toISOString().slice(0,10);
+const weights = {1:1,2:2,3:4,4:7,5:10};
+const initial = {
+  coins:0, tasks:{}, dayTypes:{}, cycle:{}, events:{}, fitness:[], fitLevel:1,
+  projects:[], focus:[], spending:{}, jars:[], owned:[],
+  shop:[
+    {id:"plant",name:"Trailing houseplant",cost:12,icon:"🪴"},
+    {id:"candle",name:"Vanilla candle",cost:10,icon:"🕯️"},
+    {id:"books",name:"Cosy book stack",cost:14,icon:"📚"},
+    {id:"cushion",name:"Blush velvet cushion",cost:16,icon:"🛋️"},
+    {id:"art",name:"Moonlit wall print",cost:20,icon:"🖼️"},
+    {id:"tea",name:"Special tea set",cost:18,icon:"🫖"}
+  ]
+};
+let data = JSON.parse(localStorage.getItem("cpcData") || "null") || structuredClone(initial);
+for (const k in initial) if (data[k] === undefined) data[k] = structuredClone(initial[k]);
+let selectedDate = todayKey();
+let taskTargetDate = todayKey();
+
+function save(){ localStorage.setItem("cpcData",JSON.stringify(data)); renderAll(); }
+function fmtDate(key){ return new Date(key+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}); }
+function sundayOf(date=new Date()){
+  const d=new Date(date); d.setHours(12,0,0,0); d.setDate(d.getDate()-d.getDay()); return d;
+}
+function keyOf(d){return d.toISOString().slice(0,10)}
+function esc(s=""){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function tasksFor(k){return data.tasks[k] || []}
+function totalEffort(k){return tasksFor(k).reduce((a,t)=>a+weights[t.difficulty],0)}
+function doneEffort(k){return tasksFor(k).reduce((a,t)=>a+(t.done?weights[t.difficulty]:0),0)}
+
+function renderHeader(){
+  document.getElementById("coinCount").textContent=data.coins;
+  document.getElementById("dateLabel").textContent=fmtDate(todayKey());
+  const type=data.dayTypes[todayKey()]||"Choose today’s day type";
+  document.getElementById("dayTypeLabel").textContent=type;
+  document.getElementById("dayType").value=data.dayTypes[todayKey()]||"";
+  document.getElementById("cycleStatus").value=data.cycle[todayKey()]||"none";
+  let total=totalEffort(todayKey()), done=doneEffort(todayKey());
+  document.getElementById("effortText").textContent=`${done} of ${total} effort points`;
+  document.getElementById("effortBar").style.width=(total?done/total*100:0)+"%";
+}
+function taskHTML(t,k,i){
+  const cat=t.category.toLowerCase();
+  return `<div class="task ${t.done?'done':''}">
+    <button class="check" onclick="toggleTask('${k}',${i})">${t.done?'✓':''}</button>
+    <div><div class="task-name"><strong>${esc(t.name)}</strong></div>
+      <span class="tag ${t.level.toLowerCase()}">${t.level}</span>
+      <span class="tag ${cat==='academic'?'acad':cat==='fitness'?'fit':cat==='money'?'money':'personal'}">${t.category}</span>
+      <span class="tag">Difficulty ${t.difficulty} · ${weights[t.difficulty]} pts</span>
+      ${t.gentle?`<div class="muted" style="margin-top:6px">Gentle option: ${esc(t.gentle)}</div>`:''}
+    </div>
+    <div class="task-actions">
+      ${t.flexible&&!t.done?`<button class="icon-btn" onclick="moveTask('${k}',${i})" title="Move to next day">→</button>`:''}
+      <button class="icon-btn" onclick="deleteTask('${k}',${i})">×</button>
+    </div></div>`;
+}
+function renderTasks(){
+  const list=document.getElementById("taskList"), ts=tasksFor(todayKey());
+  list.innerHTML=ts.length?ts.map((t,i)=>taskHTML(t,todayKey(),i)).join(""):`<div class="card empty">Add your first goal for today 🌷</div>`;
+  const s=document.getElementById("selectedDayTasks"), sts=tasksFor(selectedDate);
+  s.innerHTML=sts.length?sts.map((t,i)=>taskHTML(t,selectedDate,i)).join(""):`<div class="card empty">No goals planned for this day.</div>`;
+}
+function renderAgenda(){
+  const e=data.events[todayKey()]||[];
+  document.getElementById("agendaList").innerHTML=e.length?e.sort((a,b)=>a.time.localeCompare(b.time)).map(x=>`<div class="calendar-event"><strong>${esc(x.time||"Any time")}</strong> · ${esc(x.name)}</div>`).join(""):`<div class="card empty">No agenda items added yet.</div>`;
+}
+function renderWeek(){
+  const start=sundayOf(); let html="";
+  for(let i=0;i<7;i++){let d=new Date(start);d.setDate(start.getDate()+i);let k=keyOf(d);
+    html+=`<button class="day-chip ${k===selectedDate?'active':''}" onclick="selectDay('${k}')">${d.toLocaleDateString(undefined,{weekday:'short'})}<strong>${d.getDate()}</strong><span>${doneEffort(k)}/${totalEffort(k)}</span></button>`;
+  }
+  document.getElementById("weekStrip").innerHTML=html;
+  document.getElementById("selectedDateTitle").textContent=fmtDate(selectedDate);
+  document.getElementById("weekDayType").value=data.dayTypes[selectedDate]||"";
+}
+function renderFitness(){
+  document.getElementById("fitLevel").textContent=`Gentle Week ${data.fitLevel}`;
+  document.getElementById("fitnessList").innerHTML=data.fitness.length?data.fitness.slice().reverse().slice(0,8).map(x=>`<div class="card"><strong>${esc(x.type)}</strong> · ${x.duration} min<div class="muted">${fmtDate(x.date)}${x.hr?` · Avg HR ${x.hr}`:""}${x.zone?` · Zone 2 ${x.zone} min`:""} · ${esc(x.feel)}</div></div>`).join(""):`<div class="card empty">No sessions logged yet.</div>`;
+}
+function renderAcademic(){
+  document.getElementById("projectList").innerHTML=data.projects.length?data.projects.map((p,i)=>`<div class="card"><div style="display:flex;justify-content:space-between"><strong>${esc(p.name)}</strong><button class="icon-btn" onclick="deleteProject(${i})">×</button></div><div class="muted">${p.done||0} tasks completed</div><button class="btn secondary small" style="margin-top:8px" onclick="completeProjectTask(${i})">+ Completed task</button></div>`).join(""):`<div class="card empty">Add a manuscript, experiment series, or other project.</div>`;
+}
+function renderMoney(){
+  document.getElementById("jarList").innerHTML=data.jars.length?data.jars.map((j,i)=>{let pct=Math.min(100,j.current/j.target*100||0);return `<div class="jar"><div style="display:flex;justify-content:space-between"><strong>${esc(j.name)}</strong><button class="icon-btn" onclick="deleteJar(${i})">×</button></div><div>$${Number(j.current).toFixed(2)} of $${Number(j.target).toFixed(2)}</div><div class="jarbar"><div style="width:${pct}%"></div></div><div class="grid2" style="margin-top:9px"><input id="jarAdd${i}" type="number" step="0.01" placeholder="Amount to add"><button class="btn gold" onclick="addToJar(${i})">Add savings</button></div></div>`}).join(""):`<div class="card empty">Create a savings jar for each goal.</div>`;
+}
+function renderSummary(){
+  const all=Object.values(data.tasks).flat();
+  document.getElementById("sumGoals").textContent=all.filter(t=>t.done).length;
+  document.getElementById("sumPoints").textContent=all.reduce((a,t)=>a+(t.done?weights[t.difficulty]:0),0);
+  document.getElementById("sumFitness").textContent=data.fitness.length;
+  document.getElementById("sumFocus").textContent=data.focus.reduce((a,x)=>a+Number(x.minutes),0);
+  document.getElementById("sumSpend").textContent=Object.values(data.spending).filter(x=>x.class!=="Spending day").length;
+  document.getElementById("sumSaved").textContent="$"+data.jars.reduce((a,j)=>a+Number(j.current),0).toFixed(2);
+  document.getElementById("ownedItems").innerHTML=data.owned.length?`<p>${data.owned.map(id=>data.shop.find(x=>x.id===id)?.icon).join(" ")} <span class="muted">Vanessa’s room is getting cosier.</span></p>`:`<p class="muted">Vanessa’s room is waiting for its first item.</p>`;
+  document.getElementById("shopList").innerHTML=data.shop.map(x=>`<div class="shop-item"><div><span style="font-size:1.5rem">${x.icon}</span> <strong>${x.name}</strong></div>${data.owned.includes(x.id)?`<span class="tag ideal">Owned</span>`:`<button class="btn gold small" onclick="buyItem('${x.id}')">${x.cost} coins</button>`}</div>`).join("");
+}
+function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderMoney();renderSummary()}
+window.toggleTask=(k,i)=>{let t=data.tasks[k][i]; if(!t.done){data.coins+=weights[t.difficulty];} else {data.coins=Math.max(0,data.coins-weights[t.difficulty]);} t.done=!t.done; save()}
+window.deleteTask=(k,i)=>{data.tasks[k].splice(i,1);save()}
+window.moveTask=(k,i)=>{let d=new Date(k+"T12:00:00");d.setDate(d.getDate()+1);let nk=keyOf(d);data.tasks[nk]=data.tasks[nk]||[];data.tasks[nk].push({...data.tasks[k][i],done:false});data.tasks[k].splice(i,1);save()}
+window.selectDay=(k)=>{selectedDate=k;taskTargetDate=k;renderAll()}
+window.deleteProject=i=>{data.projects.splice(i,1);save()}
+window.completeProjectTask=i=>{data.projects[i].done=(data.projects[i].done||0)+1;data.coins+=4;save()}
+window.deleteJar=i=>{data.jars.splice(i,1);save()}
+window.addToJar=i=>{let el=document.getElementById("jarAdd"+i),v=Number(el.value);if(v>0){data.jars[i].current+=v;data.coins+=Math.max(1,Math.floor(v/10));save()}}
+window.buyItem=id=>{let x=data.shop.find(x=>x.id===id);if(data.coins>=x.cost){data.coins-=x.cost;data.owned.push(id);save()}else alert("You need a few more coins for that item.")}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.page").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.page).classList.add("active")})
+document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.open).showModal())
+document.getElementById("dayType").onchange=e=>{data.dayTypes[todayKey()]=e.target.value;save()}
+document.getElementById("cycleStatus").onchange=e=>{data.cycle[todayKey()]=e.target.value;save()}
+document.getElementById("weekDayType").onchange=e=>{data.dayTypes[selectedDate]=e.target.value;save()}
+document.getElementById("saveTask").onclick=e=>{
+  const name=document.getElementById("taskName").value.trim();if(!name){e.preventDefault();return}
+  const t={name,category:taskCategory.value,level:taskLevel.value,difficulty:Number(taskDifficulty.value),flexible:taskFlexible.value==="true",gentle:taskGentle.value.trim(),done:false};
+  data.tasks[taskTargetDate]=data.tasks[taskTargetDate]||[];data.tasks[taskTargetDate].push(t);
+  document.getElementById("taskForm").reset();save()
+}
+document.getElementById("saveEvent").onclick=()=>{let n=eventName.value.trim();if(!n)return;data.events[todayKey()]=data.events[todayKey()]||[];data.events[todayKey()].push({time:eventTime.value,name:n});eventName.value="";save()}
+document.getElementById("addSelectedTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
+document.getElementById("addWeeklyTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
+document.getElementById("copyYesterday").onclick=()=>{let d=new Date(selectedDate+"T12:00:00");d.setDate(d.getDate()-1);let pk=keyOf(d);data.tasks[selectedDate]=(data.tasks[pk]||[]).map(t=>({...t,done:false}));save()}
+document.getElementById("gentleBtn").onclick=()=>{
+  const status=data.cycle[todayKey()]||"none";
+  if(!["1","2","3"].includes(status)){alert("Set cycle status to period day 1, 2, or 3 to activate gentle suggestions.");return}
+  let changed=0;tasksFor(todayKey()).forEach(t=>{if(!t.done&&t.gentle){t.name=t.gentle;t.difficulty=Math.max(1,t.difficulty-1);t.gentle="";changed++}});
+  if(!changed)alert("Add a gentler alternative to a goal first. You can edit by deleting and recreating it in this version."); else save()
+}
+document.getElementById("logFitness").onclick=()=>{data.fitness.push({date:todayKey(),type:fitType.value,duration:Number(fitDuration.value),hr:fitHR.value,zone:fitZone.value,feel:fitFeel.value});data.coins+=4;fitHR.value="";fitZone.value="";save()}
+document.getElementById("progressLevel").onclick=()=>{data.fitLevel++;save()}
+document.getElementById("repeatLevel").onclick=()=>alert("This level will stay in place for another week.")
+document.getElementById("addProject").onclick=()=>{let n=prompt("Project name");if(n){data.projects.push({name:n,done:0});save()}}
+document.getElementById("logFocus").onclick=()=>{let m=Number(focusMinutes.value),l=focusLabel.value.trim();if(m>0){data.focus.push({date:todayKey(),label:l,minutes:m});data.coins+=Math.max(1,Math.floor(m/15));focusMinutes.value="";focusLabel.value="";save()}}
+document.getElementById("saveSpending").onclick=()=>{data.spending[todayKey()]={class:spendClass.value,transit:Number(transitAmount.value||0),other:Number(otherAmount.value||0)};if(spendClass.value!=="Spending day")data.coins+=2;save()}
+document.getElementById("addJar").onclick=()=>{let n=prompt("Savings jar name");if(!n)return;let t=Number(prompt("Target amount ($)"));if(t>0){data.jars.push({name:n,target:t,current:0});save()}}
+document.getElementById("exportData").onclick=()=>{
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cosy-progress-club-backup.json";a.click();URL.revokeObjectURL(a.href)
+}
+document.getElementById("importData").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();alert("Backup imported.");}catch{alert("That file could not be imported.")}};r.readAsText(f)}
+document.getElementById("resetData").onclick=()=>{if(confirm("Reset all Cosy Progress Club data?")){data=structuredClone(initial);save()}}
+taskTargetDate=todayKey();renderAll();
+</script>
+</body>
+</html>
