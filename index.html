@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-title" content="Cosy Progress Club" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
-  <title>Cosy Progress Club v1.3</title>
-  <!-- Cosy Progress Club v1.3: modal and alignment fixes -->
+  <title>Cosy Progress Club v2.0</title>
+  <!-- Cosy Progress Club v2.0 -->
   <style>
     :root{
       --rose:#a96b7d; --rose2:#dba4b3; --blush:#f7e8ed; --cream:#fffaf4;
@@ -112,6 +112,31 @@
     dialog::backdrop{background:rgba(60,42,48,.35)}
     .modal{padding:18px;background:var(--cream)}
     .modal h3{margin-top:0}.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
+    .quote-card{
+      margin-top:12px;padding:13px 15px;border-radius:17px;
+      background:linear-gradient(135deg,#f3eaf5,#edf2e9);
+      border:1px solid var(--line);font-size:.92rem
+    }
+    .agenda-section{
+      border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden
+    }
+    .agenda-head{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:11px 12px;background:#fbf4f7
+    }
+    .agenda-body{padding:10px;display:grid;gap:8px}
+    .agenda-row{display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:center}
+    .subtask{
+      display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;
+      padding:8px 0;border-top:1px solid var(--line)
+    }
+    .subtask:first-child{border-top:0}
+    .focus-breakdown{display:grid;gap:8px}
+    .focus-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+    .purchase-row{display:grid;grid-template-columns:90px 1fr auto auto;gap:8px;align-items:center}
+    .month-total{font-size:1.6rem;font-weight:900}
+
     .hidden{display:none!important}
     .empty{text-align:center;padding:22px;color:var(--muted)}
     .confetti{position:fixed;inset:0;pointer-events:none;z-index:99}
@@ -145,6 +170,7 @@
           <div class="muted" style="margin-top:5px;font-weight:800">Vanessa</div>
         </div>
       </div>
+      <div class="quote-card"><strong>Vanessa says:</strong> <span id="scienceQuote"></span></div>
 
       <div class="section-title"><h3>Today’s setup</h3></div>
       <div class="card stack">
@@ -162,7 +188,7 @@
         <button class="btn secondary" id="gentleBtn">🌙 Suggest gentler goals</button>
       </div>
 
-      <div class="section-title"><h3>Agenda</h3><button class="btn ghost small" data-open="eventDialog">+ Event</button></div>
+      <div class="section-title"><h3>Agenda</h3><button class="btn ghost small" id="addAgendaSection">+ Section</button></div>
       <div id="agendaList" class="stack"></div>
 
       <div class="section-title"><h3>Today’s goals</h3><button class="btn small" data-open="taskDialog">+ Goal</button></div>
@@ -185,9 +211,9 @@
     </section>
 
     <section id="fitness" class="page">
-      <div class="section-title"><h3>Gentle cardio plan</h3></div>
+      <div class="section-title"><h3>Cardio</h3></div>
       <div class="card stack">
-        <div class="notice">Aim for 3–4 sessions weekly. For run-walks, use your Apple Watch and slow to a walk when needed to stay around 140–150 bpm.</div>
+        <div class="notice">Aim for 3–4 movement sessions weekly. For run-walks, use your Apple Watch and slow to a walk when needed to stay around 140–150 bpm.</div>
         <div class="grid2">
           <div><label>Session type</label><select id="fitType"><option>Run-walk</option><option>Active yoga</option><option>Dance</option><option>Other cardio</option></select></div>
           <div><label>Duration (minutes)</label><input id="fitDuration" type="number" min="1" value="20"></div>
@@ -195,14 +221,26 @@
           <div><label>Time in Zone 2 (minutes)</label><input id="fitZone" type="number" placeholder="Optional"></div>
         </div>
         <div><label>How did it feel?</label><select id="fitFeel"><option>Comfortable</option><option>Manageable</option><option>Hard</option><option>Stopped early</option></select></div>
-        <button class="btn" id="logFitness">Log session</button>
+        <button class="btn" id="logFitness">Log cardio</button>
       </div>
-      <div class="section-title"><h3>Progression</h3></div>
+
+      <div class="section-title"><h3>Gentle run-walk progression</h3></div>
       <div class="card">
         <p><strong id="fitLevel">Gentle Week 1</strong></p>
         <p class="muted">Suggested run-walk: 5-minute warm-up, then 1 minute easy jogging + 2 minutes walking × 5, followed by a cool-down.</p>
         <div class="grid2"><button class="btn secondary" id="repeatLevel">Repeat this level</button><button class="btn" id="progressLevel">Progress gently</button></div>
       </div>
+
+      <div class="section-title"><h3>Strength training</h3></div>
+      <div class="card stack">
+        <div class="grid2">
+          <div><label>Session name</label><input id="strengthName" placeholder="e.g. lower body"></div>
+          <div><label>Duration (minutes)</label><input id="strengthDuration" type="number" min="1" value="20"></div>
+        </div>
+        <div><label>Exercises or notes</label><textarea id="strengthNotes" rows="3" placeholder="e.g. bridges, squats, planks"></textarea></div>
+        <button class="btn" id="logStrength">Log strength session</button>
+      </div>
+
       <div class="section-title"><h3>Recent sessions</h3></div>
       <div id="fitnessList" class="stack"></div>
     </section>
@@ -210,22 +248,45 @@
     <section id="academic" class="page">
       <div class="section-title"><h3>Academic projects</h3><button class="btn small" id="addProject">+ Project</button></div>
       <div id="projectList" class="stack"></div>
+
       <div class="section-title"><h3>Focus log</h3></div>
       <div class="card stack">
-        <div class="grid2"><div><label>Project/task</label><input id="focusLabel" placeholder="e.g. revise discussion"></div><div><label>Focused minutes</label><input id="focusMinutes" type="number" min="1"></div></div>
+        <div class="grid2">
+          <div><label>Project/category</label><input id="focusCategory" placeholder="e.g. USMB manuscript"></div>
+          <div><label>Specific focus</label><input id="focusLabel" placeholder="e.g. revise discussion"></div>
+          <div><label>Focused minutes</label><input id="focusMinutes" type="number" min="1"></div>
+        </div>
         <button class="btn" id="logFocus">Log focused time</button>
       </div>
+      <div class="section-title"><h3>Focus breakdown</h3></div>
+      <div id="focusBreakdown" class="card focus-breakdown"></div>
     </section>
 
     <section id="money" class="page">
-      <div class="section-title"><h3>Today’s spending</h3></div>
+      <div class="section-title"><h3>Record a purchase</h3></div>
       <div class="card stack">
-        <div><label>Day classification</label><select id="spendClass"><option>No-spend day</option><option>Transit-only day</option><option>Spending day</option></select></div>
-        <div class="grid2"><div><label>Transit amount ($)</label><input id="transitAmount" type="number" step="0.01" min="0"></div><div><label>Other spending ($)</label><input id="otherAmount" type="number" step="0.01" min="0"></div></div>
-        <button class="btn" id="saveSpending">Save today</button>
+        <div class="grid2">
+          <div><label>Date</label><input id="purchaseDate" type="date"></div>
+          <div><label>Amount ($)</label><input id="purchaseAmount" type="number" step="0.01" min="0"></div>
+          <div><label>Category</label><select id="purchaseCategory">
+            <option>Transit</option><option>Groceries</option><option>Dining</option><option>Shopping</option>
+            <option>Health</option><option>Entertainment</option><option>Bills</option><option>Other</option>
+          </select></div>
+          <div><label>Purchase</label><input id="purchaseName" placeholder="e.g. subway fare"></div>
+        </div>
+        <div><label>Note (optional)</label><input id="purchaseNote" placeholder="Any useful detail"></div>
+        <button class="btn" id="addPurchase">Add purchase</button>
       </div>
-      <div class="section-title"><h3>Savings jars</h3><button class="btn small" id="addJar">+ Jar</button></div>
-      <div id="jarList" class="stack"></div>
+
+      <div class="section-title"><h3>Monthly spending</h3></div>
+      <div class="card stack">
+        <div><label>Month</label><input id="moneyMonth" type="month"></div>
+        <div><span class="muted">Total spent</span><div class="month-total" id="monthTotal">$0.00</div></div>
+        <div id="categoryTotals" class="focus-breakdown"></div>
+      </div>
+
+      <div class="section-title"><h3>Purchases</h3></div>
+      <div id="purchaseList" class="stack"></div>
     </section>
 
     <section id="summary" class="page">
@@ -234,10 +295,12 @@
         <div class="metric"><span class="muted">Goals completed</span><strong id="sumGoals">0</strong></div>
         <div class="metric"><span class="muted">Effort points</span><strong id="sumPoints">0</strong></div>
         <div class="metric"><span class="muted">Cardio sessions</span><strong id="sumFitness">0</strong></div>
+        <div class="metric"><span class="muted">Strength sessions</span><strong id="sumStrength">0</strong></div>
         <div class="metric"><span class="muted">Focus minutes</span><strong id="sumFocus">0</strong></div>
-        <div class="metric"><span class="muted">No-spend / transit-only</span><strong id="sumSpend">0</strong></div>
-        <div class="metric"><span class="muted">Saved</span><strong id="sumSaved">$0</strong></div>
+        <div class="metric"><span class="muted">This month spent</span><strong id="sumSpent">$0</strong></div>
       </div>
+      <div class="section-title"><h3>Focus summary</h3></div>
+      <div id="summaryFocusBreakdown" class="card focus-breakdown"></div>
       <div class="section-title"><h3>Vanessa’s room & shop</h3></div>
       <div class="card stack">
         <p class="muted">Spend your coins on cosy items. Purchased items stay in Vanessa’s room.</p>
@@ -272,6 +335,7 @@
       <div><label>Goal level</label><select id="taskLevel"><option>Essential</option><option>Ideal</option><option>Bonus</option></select></div>
       <div><label>Difficulty</label><select id="taskDifficulty"><option value="1">1 — Tiny</option><option value="2">2 — Light</option><option value="3">3 — Moderate</option><option value="4">4 — Challenging</option><option value="5">5 — Major</option></select></div>
       <div><label>Flexible?</label><select id="taskFlexible"><option value="true">Yes, can move</option><option value="false">No, date-specific</option></select></div>
+      <div><label>Repeat for consecutive days</label><input id="taskRepeat" type="number" min="1" max="30" value="1"></div>
     </div>
     <div><label>Gentler alternative (optional)</label><input id="taskGentle" placeholder="e.g. 10-minute walk instead"></div>
   </div>
@@ -280,16 +344,34 @@
 
 <dialog id="eventDialog"><div class="modal">
   <h3>Add an agenda item</h3>
-  <div class="stack"><div><label>Time</label><input id="eventTime" type="time"></div><div><label>Event</label><input id="eventName" placeholder="e.g. lab meeting"></div></div>
+  <div class="stack">
+    <div><label>Section</label><select id="eventSection"></select></div>
+    <div><label>Time</label><input id="eventTime" type="time"></div>
+    <div><label>Item</label><input id="eventName" placeholder="e.g. lab meeting"></div>
+  </div>
   <div class="modal-actions"><button class="btn ghost" id="cancelEvent" type="button">Cancel</button><button class="btn" id="saveEvent" type="button">Add</button></div>
 </div></dialog>
 
 <script>
-const todayKey = () => new Date().toISOString().slice(0,10);
-const weights = {1:1,2:2,3:4,4:7,5:10};
-const initial = {
-  coins:0, tasks:{}, dayTypes:{}, cycle:{}, events:{}, fitness:[], fitLevel:1,
-  projects:[], focus:[], spending:{}, jars:[], owned:[],
+const localKey=(d=new Date())=>{
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+};
+const parseLocal=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d,12,0,0)};
+const todayKey=()=>localKey(new Date());
+const weights={1:1,2:2,3:4,4:7,5:10};
+const scienceQuotes=[
+  "Progress is data: notice it, record it, and build from it.",
+  "Small repeated actions are how complex systems change.",
+  "A difficult day is still one point in a much larger dataset.",
+  "Recovery is part of adaptation, not the opposite of progress.",
+  "Curiosity turns uncertainty into the next useful experiment.",
+  "Consistency matters more than a perfectly controlled day.",
+  "Your future results are being shaped by today’s small inputs."
+];
+const initial={
+  coins:0,tasks:{},dayTypes:{},cycle:{},agenda:{},fitness:[],strength:[],fitLevel:1,
+  projects:[],focus:[],purchases:[],owned:[],
   shop:[
     {id:"plant",name:"Trailing houseplant",cost:12,icon:"🪴"},
     {id:"candle",name:"Vanilla candle",cost:10,icon:"🕯️"},
@@ -299,32 +381,41 @@ const initial = {
     {id:"tea",name:"Special tea set",cost:18,icon:"🫖"}
   ]
 };
-let data = JSON.parse(localStorage.getItem("cpcData") || "null") || structuredClone(initial);
-for (const k in initial) if (data[k] === undefined) data[k] = structuredClone(initial[k]);
-let selectedDate = todayKey();
-let taskTargetDate = todayKey();
+let data=JSON.parse(localStorage.getItem("cpcData")||"null")||structuredClone(initial);
+for(const k in initial) if(data[k]===undefined)data[k]=structuredClone(initial[k]);
 
-function save(){ localStorage.setItem("cpcData",JSON.stringify(data)); renderAll(); }
-function fmtDate(key){ return new Date(key+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}); }
-function sundayOf(date=new Date()){
-  const d=new Date(date); d.setHours(12,0,0,0); d.setDate(d.getDate()-d.getDay()); return d;
+// Migrate old events into a default agenda section.
+if(data.events){
+  for(const [k,items] of Object.entries(data.events)){
+    if(items?.length&&!data.agenda[k])data.agenda[k]=[{title:"General",items:items.map(x=>({...x}))}];
+  }
 }
-function keyOf(d){return d.toISOString().slice(0,10)}
-function esc(s=""){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function tasksFor(k){return data.tasks[k] || []}
+if(!Array.isArray(data.strength))data.strength=[];
+if(!Array.isArray(data.purchases))data.purchases=[];
+data.projects=(data.projects||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[]}));
+
+let selectedDate=todayKey(),taskTargetDate=todayKey();
+
+function save(){localStorage.setItem("cpcData",JSON.stringify(data));renderAll()}
+function fmtDate(k){return parseLocal(k).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}
+function sundayOf(date=new Date()){const d=new Date(date);d.setHours(12,0,0,0);d.setDate(d.getDate()-d.getDay());return d}
+function keyOf(d){return localKey(d)}
+function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function tasksFor(k){return data.tasks[k]||[]}
 function totalEffort(k){return tasksFor(k).reduce((a,t)=>a+weights[t.difficulty],0)}
 function doneEffort(k){return tasksFor(k).reduce((a,t)=>a+(t.done?weights[t.difficulty]:0),0)}
 
 function renderHeader(){
-  document.getElementById("coinCount").textContent=data.coins;
-  document.getElementById("dateLabel").textContent=fmtDate(todayKey());
-  const type=data.dayTypes[todayKey()]||"Choose today’s day type";
-  document.getElementById("dayTypeLabel").textContent=type;
-  document.getElementById("dayType").value=data.dayTypes[todayKey()]||"";
-  document.getElementById("cycleStatus").value=data.cycle[todayKey()]||"none";
-  let total=totalEffort(todayKey()), done=doneEffort(todayKey());
-  document.getElementById("effortText").textContent=`${done} of ${total} effort points`;
-  document.getElementById("effortBar").style.width=(total?done/total*100:0)+"%";
+  coinCount.textContent=data.coins;
+  dateLabel.textContent=fmtDate(todayKey());
+  dayTypeLabel.textContent=data.dayTypes[todayKey()]||"Choose today’s day type";
+  dayType.value=data.dayTypes[todayKey()]||"";
+  cycleStatus.value=data.cycle[todayKey()]||"none";
+  const total=totalEffort(todayKey()),done=doneEffort(todayKey());
+  effortText.textContent=`${done} of ${total} effort points`;
+  effortBar.style.width=(total?done/total*100:0)+"%";
+  const dayNum=Math.floor(parseLocal(todayKey()).getTime()/86400000);
+  scienceQuote.textContent=scienceQuotes[Math.abs(dayNum)%scienceQuotes.length];
 }
 function taskHTML(t,k,i){
   const cat=t.category.toLowerCase();
@@ -337,151 +428,164 @@ function taskHTML(t,k,i){
       ${t.gentle?`<div class="muted" style="margin-top:6px">Gentle option: ${esc(t.gentle)}</div>`:''}
     </div>
     <div class="task-actions">
-      ${t.flexible&&!t.done?`<button class="icon-btn" onclick="moveTask('${k}',${i})" title="Move to next day">→</button>`:''}
+      ${t.flexible&&!t.done?`<button class="icon-btn" onclick="moveTask('${k}',${i})">→</button>`:''}
       <button class="icon-btn" onclick="deleteTask('${k}',${i})">×</button>
     </div></div>`;
 }
 function renderTasks(){
-  const list=document.getElementById("taskList"), ts=tasksFor(todayKey());
-  list.innerHTML=ts.length?ts.map((t,i)=>taskHTML(t,todayKey(),i)).join(""):`<div class="card empty">Add your first goal for today 🌷</div>`;
-  const s=document.getElementById("selectedDayTasks"), sts=tasksFor(selectedDate);
-  s.innerHTML=sts.length?sts.map((t,i)=>taskHTML(t,selectedDate,i)).join(""):`<div class="card empty">No goals planned for this day.</div>`;
+  const ts=tasksFor(todayKey());
+  taskList.innerHTML=ts.length?ts.map((t,i)=>taskHTML(t,todayKey(),i)).join(""):`<div class="card empty">Add your first goal for today 🌷</div>`;
+  const sts=tasksFor(selectedDate);
+  selectedDayTasks.innerHTML=sts.length?sts.map((t,i)=>taskHTML(t,selectedDate,i)).join(""):`<div class="card empty">No goals planned for this day.</div>`;
+}
+function agendaFor(k){
+  if(!data.agenda[k])data.agenda[k]=[];
+  return data.agenda[k];
 }
 function renderAgenda(){
-  const e=data.events[todayKey()]||[];
-  document.getElementById("agendaList").innerHTML=e.length?e.sort((a,b)=>a.time.localeCompare(b.time)).map(x=>`<div class="calendar-event"><strong>${esc(x.time||"Any time")}</strong> · ${esc(x.name)}</div>`).join(""):`<div class="card empty">No agenda items added yet.</div>`;
+  const sections=agendaFor(todayKey());
+  agendaList.innerHTML=sections.length?sections.map((s,si)=>`
+    <div class="agenda-section">
+      <div class="agenda-head">
+        <strong>${esc(s.title)}</strong>
+        <div><button class="icon-btn" onclick="openAgendaItem(${si})">+</button>
+        <button class="icon-btn" onclick="deleteAgendaSection(${si})">×</button></div>
+      </div>
+      <div class="agenda-body">
+        ${s.items.length?s.items.sort((a,b)=>(a.time||"").localeCompare(b.time||"")).map((x,ii)=>`
+          <div class="agenda-row"><span>${esc(x.time||"Any time")}</span><span>${esc(x.name)}</span><button class="icon-btn" onclick="deleteAgendaItem(${si},${ii})">×</button></div>`).join(""):`<div class="muted">No items yet.</div>`}
+      </div>
+    </div>`).join(""):`<div class="card empty">Add a section such as Morning, Lab, Home, or Evening.</div>`;
 }
 function renderWeek(){
-  const start=sundayOf(); let html="";
-  for(let i=0;i<7;i++){let d=new Date(start);d.setDate(start.getDate()+i);let k=keyOf(d);
-    html+=`<button class="day-chip ${k===selectedDate?'active':''}" onclick="selectDay('${k}')">${d.toLocaleDateString(undefined,{weekday:'short'})}<strong>${d.getDate()}</strong><span>${doneEffort(k)}/${totalEffort(k)}</span></button>`;
+  const start=sundayOf(parseLocal(todayKey()));let out="";
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);const k=keyOf(d);
+    out+=`<button class="day-chip ${k===selectedDate?'active':''}" onclick="selectDay('${k}')">${d.toLocaleDateString(undefined,{weekday:'short'})}<strong>${d.getDate()}</strong><span>${doneEffort(k)}/${totalEffort(k)}</span></button>`;
   }
-  document.getElementById("weekStrip").innerHTML=html;
-  document.getElementById("selectedDateTitle").textContent=fmtDate(selectedDate);
-  document.getElementById("weekDayType").value=data.dayTypes[selectedDate]||"";
+  weekStrip.innerHTML=out;
+  selectedDateTitle.textContent=fmtDate(selectedDate);
+  weekDayType.value=data.dayTypes[selectedDate]||"";
 }
 function renderFitness(){
-  document.getElementById("fitLevel").textContent=`Gentle Week ${data.fitLevel}`;
-  document.getElementById("fitnessList").innerHTML=data.fitness.length?data.fitness.slice().reverse().slice(0,8).map(x=>`<div class="card"><strong>${esc(x.type)}</strong> · ${x.duration} min<div class="muted">${fmtDate(x.date)}${x.hr?` · Avg HR ${x.hr}`:""}${x.zone?` · Zone 2 ${x.zone} min`:""} · ${esc(x.feel)}</div></div>`).join(""):`<div class="card empty">No sessions logged yet.</div>`;
+  fitLevel.textContent=`Gentle Week ${data.fitLevel}`;
+  const combined=[
+    ...data.fitness.map(x=>({...x,kind:"Cardio"})),
+    ...data.strength.map(x=>({...x,kind:"Strength"}))
+  ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);
+  fitnessList.innerHTML=combined.length?combined.map(x=>`<div class="card"><strong>${esc(x.kind)}: ${esc(x.type||x.name||"Session")}</strong> · ${x.duration} min<div class="muted">${fmtDate(x.date)}${x.hr?` · Avg HR ${x.hr}`:""}${x.zone?` · Zone 2 ${x.zone} min`:""}${x.feel?` · ${esc(x.feel)}`:""}${x.notes?` · ${esc(x.notes)}`:""}</div></div>`).join(""):`<div class="card empty">No sessions logged yet.</div>`;
 }
 function renderAcademic(){
-  document.getElementById("projectList").innerHTML=data.projects.length?data.projects.map((p,i)=>`<div class="card"><div style="display:flex;justify-content:space-between"><strong>${esc(p.name)}</strong><button class="icon-btn" onclick="deleteProject(${i})">×</button></div><div class="muted">${p.done||0} tasks completed</div><button class="btn secondary small" style="margin-top:8px" onclick="completeProjectTask(${i})">+ Completed task</button></div>`).join(""):`<div class="card empty">Add a manuscript, experiment series, or other project.</div>`;
+  projectList.innerHTML=data.projects.length?data.projects.map((p,i)=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><strong>${esc(p.name)}</strong><div><button class="icon-btn" onclick="addSubtask(${i})">+</button><button class="icon-btn" onclick="deleteProject(${i})">×</button></div></div>
+      <div class="muted">${p.subtasks.filter(s=>s.done).length} of ${p.subtasks.length} subtasks complete</div>
+      <div style="margin-top:8px">${p.subtasks.length?p.subtasks.map((s,si)=>`
+        <div class="subtask"><button class="check" onclick="toggleSubtask(${i},${si})">${s.done?'✓':''}</button><span style="${s.done?'text-decoration:line-through;opacity:.65':''}">${esc(s.name)}</span><button class="icon-btn" onclick="deleteSubtask(${i},${si})">×</button></div>`).join(""):`<div class="muted">Add the first smaller task.</div>`}</div>
+    </div>`).join(""):`<div class="card empty">Add a manuscript, experiment series, or other project.</div>`;
+  renderFocusBreakdowns();
 }
+function focusGroups(){
+  const g={};
+  for(const x of data.focus){
+    const key=x.category?.trim()||x.label?.trim()||"Uncategorized";
+    g[key]=(g[key]||0)+Number(x.minutes||0);
+  }
+  return Object.entries(g).sort((a,b)=>b[1]-a[1]);
+}
+function renderFocusBreakdowns(){
+  const groups=focusGroups();
+  const markup=groups.length?groups.map(([k,v])=>`<div class="focus-row"><span>${esc(k)}</span><strong>${v} min</strong></div>`).join(""):`<div class="muted">No focus time logged yet.</div>`;
+  focusBreakdown.innerHTML=markup;
+  summaryFocusBreakdown.innerHTML=markup;
+}
+function currentMonth(){return localKey(new Date()).slice(0,7)}
 function renderMoney(){
-  document.getElementById("jarList").innerHTML=data.jars.length?data.jars.map((j,i)=>{let pct=Math.min(100,j.current/j.target*100||0);return `<div class="jar"><div style="display:flex;justify-content:space-between"><strong>${esc(j.name)}</strong><button class="icon-btn" onclick="deleteJar(${i})">×</button></div><div>$${Number(j.current).toFixed(2)} of $${Number(j.target).toFixed(2)}</div><div class="jarbar"><div style="width:${pct}%"></div></div><div class="grid2" style="margin-top:9px"><input id="jarAdd${i}" type="number" step="0.01" placeholder="Amount to add"><button class="btn gold" onclick="addToJar(${i})">Add savings</button></div></div>`}).join(""):`<div class="card empty">Create a savings jar for each goal.</div>`;
+  if(!moneyMonth.value)moneyMonth.value=currentMonth();
+  if(!purchaseDate.value)purchaseDate.value=todayKey();
+  const month=moneyMonth.value;
+  const list=data.purchases.filter(p=>p.date.startsWith(month)).sort((a,b)=>b.date.localeCompare(a.date));
+  const total=list.reduce((a,p)=>a+Number(p.amount),0);
+  monthTotal.textContent="$"+total.toFixed(2);
+  const cats={};for(const p of list)cats[p.category]=(cats[p.category]||0)+Number(p.amount);
+  categoryTotals.innerHTML=Object.keys(cats).length?Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="focus-row"><span>${esc(k)}</span><strong>$${v.toFixed(2)}</strong></div>`).join(""):`<div class="muted">No purchases in this month.</div>`;
+  purchaseList.innerHTML=list.length?list.map(p=>{const i=data.purchases.indexOf(p);return `<div class="card purchase-row"><span>${fmtDate(p.date)}</span><div><strong>${esc(p.name)}</strong><div class="muted">${esc(p.category)}${p.note?` · ${esc(p.note)}`:""}</div></div><strong>$${Number(p.amount).toFixed(2)}</strong><button class="icon-btn" onclick="deletePurchase(${i})">×</button></div>`}).join(""):`<div class="card empty">No purchases recorded for this month.</div>`;
 }
 function renderSummary(){
   const all=Object.values(data.tasks).flat();
-  document.getElementById("sumGoals").textContent=all.filter(t=>t.done).length;
-  document.getElementById("sumPoints").textContent=all.reduce((a,t)=>a+(t.done?weights[t.difficulty]:0),0);
-  document.getElementById("sumFitness").textContent=data.fitness.length;
-  document.getElementById("sumFocus").textContent=data.focus.reduce((a,x)=>a+Number(x.minutes),0);
-  document.getElementById("sumSpend").textContent=Object.values(data.spending).filter(x=>x.class!=="Spending day").length;
-  document.getElementById("sumSaved").textContent="$"+data.jars.reduce((a,j)=>a+Number(j.current),0).toFixed(2);
-  document.getElementById("ownedItems").innerHTML=data.owned.length?`<p>${data.owned.map(id=>data.shop.find(x=>x.id===id)?.icon).join(" ")} <span class="muted">Vanessa’s room is getting cosier.</span></p>`:`<p class="muted">Vanessa’s room is waiting for its first item.</p>`;
-  document.getElementById("shopList").innerHTML=data.shop.map(x=>`<div class="shop-item"><div><span style="font-size:1.5rem">${x.icon}</span> <strong>${x.name}</strong></div>${data.owned.includes(x.id)?`<span class="tag ideal">Owned</span>`:`<button class="btn gold small" onclick="buyItem('${x.id}')">${x.cost} coins</button>`}</div>`).join("");
+  sumGoals.textContent=all.filter(t=>t.done).length;
+  sumPoints.textContent=all.reduce((a,t)=>a+(t.done?weights[t.difficulty]:0),0);
+  sumFitness.textContent=data.fitness.length;
+  sumStrength.textContent=data.strength.length;
+  sumFocus.textContent=data.focus.reduce((a,x)=>a+Number(x.minutes),0);
+  const month=currentMonth();
+  sumSpent.textContent="$"+data.purchases.filter(p=>p.date.startsWith(month)).reduce((a,p)=>a+Number(p.amount),0).toFixed(2);
+  ownedItems.innerHTML=data.owned.length?`<p>${data.owned.map(id=>data.shop.find(x=>x.id===id)?.icon).join(" ")} <span class="muted">Vanessa’s room is getting cosier.</span></p>`:`<p class="muted">Vanessa’s room is waiting for its first item.</p>`;
+  shopList.innerHTML=data.shop.map(x=>`<div class="shop-item"><div><span style="font-size:1.5rem">${x.icon}</span> <strong>${x.name}</strong></div>${data.owned.includes(x.id)?`<span class="tag ideal">Owned</span>`:`<button class="btn gold small" onclick="buyItem('${x.id}')">${x.cost} coins</button>`}</div>`).join("");
+  renderFocusBreakdowns();
 }
 function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderMoney();renderSummary()}
-window.toggleTask=(k,i)=>{let t=data.tasks[k][i]; if(!t.done){data.coins+=weights[t.difficulty];} else {data.coins=Math.max(0,data.coins-weights[t.difficulty]);} t.done=!t.done; save()}
+
+window.toggleTask=(k,i)=>{const t=data.tasks[k][i];data.coins=Math.max(0,data.coins+(t.done?-weights[t.difficulty]:weights[t.difficulty]));t.done=!t.done;save()}
 window.deleteTask=(k,i)=>{data.tasks[k].splice(i,1);save()}
-window.moveTask=(k,i)=>{let d=new Date(k+"T12:00:00");d.setDate(d.getDate()+1);let nk=keyOf(d);data.tasks[nk]=data.tasks[nk]||[];data.tasks[nk].push({...data.tasks[k][i],done:false});data.tasks[k].splice(i,1);save()}
-window.selectDay=(k)=>{selectedDate=k;taskTargetDate=k;renderAll()}
+window.moveTask=(k,i)=>{const d=parseLocal(k);d.setDate(d.getDate()+1);const nk=keyOf(d);data.tasks[nk]=data.tasks[nk]||[];data.tasks[nk].push({...data.tasks[k][i],done:false});data.tasks[k].splice(i,1);save()}
+window.selectDay=k=>{selectedDate=k;taskTargetDate=k;renderAll()}
+window.deleteAgendaSection=si=>{agendaFor(todayKey()).splice(si,1);save()}
+window.deleteAgendaItem=(si,ii)=>{agendaFor(todayKey())[si].items.splice(ii,1);save()}
+window.openAgendaItem=si=>{eventSection.innerHTML=agendaFor(todayKey()).map((s,i)=>`<option value="${i}" ${i===si?'selected':''}>${esc(s.title)}</option>`).join("");eventDialog.showModal()}
 window.deleteProject=i=>{data.projects.splice(i,1);save()}
-window.completeProjectTask=i=>{data.projects[i].done=(data.projects[i].done||0)+1;data.coins+=4;save()}
-window.deleteJar=i=>{data.jars.splice(i,1);save()}
-window.addToJar=i=>{let el=document.getElementById("jarAdd"+i),v=Number(el.value);if(v>0){data.jars[i].current+=v;data.coins+=Math.max(1,Math.floor(v/10));save()}}
-window.buyItem=id=>{let x=data.shop.find(x=>x.id===id);if(data.coins>=x.cost){data.coins-=x.cost;data.owned.push(id);save()}else alert("You need a few more coins for that item.")}
+window.addSubtask=i=>{const n=prompt("Subtask name");if(n){data.projects[i].subtasks.push({name:n,done:false});save()}}
+window.toggleSubtask=(i,si)=>{const s=data.projects[i].subtasks[si];s.done=!s.done;if(s.done)data.coins+=2;else data.coins=Math.max(0,data.coins-2);save()}
+window.deleteSubtask=(i,si)=>{data.projects[i].subtasks.splice(si,1);save()}
+window.deletePurchase=i=>{data.purchases.splice(i,1);save()}
+window.buyItem=id=>{const x=data.shop.find(x=>x.id===id);if(data.coins>=x.cost){data.coins-=x.cost;data.owned.push(id);save()}else alert("You need a few more coins for that item.")}
+
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.page").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.page).classList.add("active")})
 document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.open).showModal())
-document.getElementById("dayType").onchange=e=>{data.dayTypes[todayKey()]=e.target.value;save()}
-document.getElementById("cycleStatus").onchange=e=>{data.cycle[todayKey()]=e.target.value;save()}
-document.getElementById("weekDayType").onchange=e=>{data.dayTypes[selectedDate]=e.target.value;save()}
-document.getElementById("saveTask").addEventListener("click",(e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-  const nameEl=document.getElementById("taskName");
-  const name=nameEl.value.trim();
-  if(!name){
-    alert("Please enter a goal.");
-    nameEl.focus();
-    return;
+dayType.onchange=e=>{data.dayTypes[todayKey()]=e.target.value;save()}
+cycleStatus.onchange=e=>{data.cycle[todayKey()]=e.target.value;save()}
+weekDayType.onchange=e=>{data.dayTypes[selectedDate]=e.target.value;save()}
+
+saveTask.addEventListener("click",e=>{
+  e.preventDefault();e.stopPropagation();
+  const name=taskName.value.trim();if(!name){alert("Please enter a goal.");taskName.focus();return}
+  const repeat=Math.max(1,Math.min(30,Number(taskRepeat.value)||1));
+  for(let r=0;r<repeat;r++){
+    const d=parseLocal(taskTargetDate);d.setDate(d.getDate()+r);const k=keyOf(d);
+    data.tasks[k]=data.tasks[k]||[];
+    data.tasks[k].push({name,category:taskCategory.value,level:taskLevel.value,difficulty:Number(taskDifficulty.value),flexible:taskFlexible.value==="true",gentle:taskGentle.value.trim(),done:false});
   }
-  const t={
-    name,
-    category:document.getElementById("taskCategory").value,
-    level:document.getElementById("taskLevel").value,
-    difficulty:Number(document.getElementById("taskDifficulty").value),
-    flexible:document.getElementById("taskFlexible").value==="true",
-    gentle:document.getElementById("taskGentle").value.trim(),
-    done:false
-  };
-  data.tasks[taskTargetDate]=data.tasks[taskTargetDate]||[];
-  data.tasks[taskTargetDate].push(t);
-
-  document.getElementById("taskDialog").close();
-
-  nameEl.value="";
-  document.getElementById("taskCategory").value="Academic";
-  document.getElementById("taskLevel").value="Essential";
-  document.getElementById("taskDifficulty").value="1";
-  document.getElementById("taskFlexible").value="true";
-  document.getElementById("taskGentle").value="";
+  taskDialog.close();
+  taskName.value="";taskCategory.value="Academic";taskLevel.value="Essential";taskDifficulty.value="1";taskFlexible.value="true";taskGentle.value="";taskRepeat.value="1";
   save();
 });
+cancelTask.onclick=e=>{e.preventDefault();taskDialog.close()}
+addSelectedTask.onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
+addWeeklyTask.onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
+copyYesterday.onclick=()=>{const d=parseLocal(selectedDate);d.setDate(d.getDate()-1);const pk=keyOf(d);data.tasks[selectedDate]=(data.tasks[pk]||[]).map(t=>({...t,done:false}));save()}
 
-document.getElementById("cancelTask").addEventListener("click",(e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-  document.getElementById("taskDialog").close();
-});
-document.getElementById("saveEvent").addEventListener("click",(e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-  const nameEl=document.getElementById("eventName");
-  const n=nameEl.value.trim();
-  if(!n){
-    alert("Please enter an event.");
-    nameEl.focus();
-    return;
-  }
-  data.events[todayKey()]=data.events[todayKey()]||[];
-  data.events[todayKey()].push({
-    time:document.getElementById("eventTime").value,
-    name:n
-  });
-  document.getElementById("eventDialog").close();
-  nameEl.value="";
-  document.getElementById("eventTime").value="";
-  save();
-});
+addAgendaSection.onclick=()=>{const title=prompt("Section name, such as Morning, Lab, Home, or Evening");if(title){agendaFor(todayKey()).push({title,items:[]});save()}}
+saveEvent.onclick=e=>{e.preventDefault();const n=eventName.value.trim();if(!n){alert("Please enter an agenda item.");return}const si=Number(eventSection.value);agendaFor(todayKey())[si].items.push({time:eventTime.value,name:n});eventDialog.close();eventName.value="";eventTime.value="";save()}
+cancelEvent.onclick=e=>{e.preventDefault();eventDialog.close()}
 
-document.getElementById("cancelEvent").addEventListener("click",(e)=>{
-  e.preventDefault();
-  e.stopPropagation();
-  document.getElementById("eventDialog").close();
-});
-document.getElementById("addSelectedTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
-document.getElementById("addWeeklyTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
-document.getElementById("copyYesterday").onclick=()=>{let d=new Date(selectedDate+"T12:00:00");d.setDate(d.getDate()-1);let pk=keyOf(d);data.tasks[selectedDate]=(data.tasks[pk]||[]).map(t=>({...t,done:false}));save()}
-document.getElementById("gentleBtn").onclick=()=>{
-  const status=data.cycle[todayKey()]||"none";
-  if(!["1","2","3"].includes(status)){alert("Set cycle status to period day 1, 2, or 3 to activate gentle suggestions.");return}
-  let changed=0;tasksFor(todayKey()).forEach(t=>{if(!t.done&&t.gentle){t.name=t.gentle;t.difficulty=Math.max(1,t.difficulty-1);t.gentle="";changed++}});
-  if(!changed)alert("Add a gentler alternative to a goal first. You can edit by deleting and recreating it in this version."); else save()
-}
-document.getElementById("logFitness").onclick=()=>{data.fitness.push({date:todayKey(),type:fitType.value,duration:Number(fitDuration.value),hr:fitHR.value,zone:fitZone.value,feel:fitFeel.value});data.coins+=4;fitHR.value="";fitZone.value="";save()}
-document.getElementById("progressLevel").onclick=()=>{data.fitLevel++;save()}
-document.getElementById("repeatLevel").onclick=()=>alert("This level will stay in place for another week.")
-document.getElementById("addProject").onclick=()=>{let n=prompt("Project name");if(n){data.projects.push({name:n,done:0});save()}}
-document.getElementById("logFocus").onclick=()=>{let m=Number(focusMinutes.value),l=focusLabel.value.trim();if(m>0){data.focus.push({date:todayKey(),label:l,minutes:m});data.coins+=Math.max(1,Math.floor(m/15));focusMinutes.value="";focusLabel.value="";save()}}
-document.getElementById("saveSpending").onclick=()=>{data.spending[todayKey()]={class:spendClass.value,transit:Number(transitAmount.value||0),other:Number(otherAmount.value||0)};if(spendClass.value!=="Spending day")data.coins+=2;save()}
-document.getElementById("addJar").onclick=()=>{let n=prompt("Savings jar name");if(!n)return;let t=Number(prompt("Target amount ($)"));if(t>0){data.jars.push({name:n,target:t,current:0});save()}}
-document.getElementById("exportData").onclick=()=>{
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cosy-progress-club-backup.json";a.click();URL.revokeObjectURL(a.href)
-}
-document.getElementById("importData").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();alert("Backup imported.");}catch{alert("That file could not be imported.")}};r.readAsText(f)}
-document.getElementById("resetData").onclick=()=>{if(confirm("Reset all Cosy Progress Club data?")){data=structuredClone(initial);save()}}
-taskTargetDate=todayKey();renderAll();
+gentleBtn.onclick=()=>{const status=data.cycle[todayKey()]||"none";if(!["1","2","3"].includes(status)){alert("Set cycle status to period day 1, 2, or 3 first.");return}let changed=0;tasksFor(todayKey()).forEach(t=>{if(!t.done&&t.gentle){t.name=t.gentle;t.difficulty=Math.max(1,t.difficulty-1);t.gentle="";changed++}});if(!changed)alert("Add a gentler alternative to a goal first.");else save()}
+
+logFitness.onclick=()=>{data.fitness.push({date:todayKey(),type:fitType.value,duration:Number(fitDuration.value),hr:fitHR.value,zone:fitZone.value,feel:fitFeel.value});data.coins+=4;fitHR.value="";fitZone.value="";save()}
+logStrength.onclick=()=>{const name=strengthName.value.trim()||"Strength session";data.strength.push({date:todayKey(),name,duration:Number(strengthDuration.value),notes:strengthNotes.value.trim()});data.coins+=4;strengthName.value="";strengthNotes.value="";save()}
+progressLevel.onclick=()=>{data.fitLevel++;save()}
+repeatLevel.onclick=()=>alert("This level will stay in place for another week.")
+
+addProject.onclick=()=>{const n=prompt("Project name");if(n){data.projects.push({name:n,subtasks:[]});save()}}
+logFocus.onclick=()=>{const m=Number(focusMinutes.value),label=focusLabel.value.trim(),category=focusCategory.value.trim();if(m>0){data.focus.push({date:todayKey(),category,label,minutes:m});data.coins+=Math.max(1,Math.floor(m/15));focusMinutes.value="";focusLabel.value="";save()}}
+
+addPurchase.onclick=()=>{const amount=Number(purchaseAmount.value),name=purchaseName.value.trim();if(!(amount>=0)||!name){alert("Please enter a purchase name and amount.");return}data.purchases.push({date:purchaseDate.value||todayKey(),amount,category:purchaseCategory.value,name,note:purchaseNote.value.trim()});purchaseAmount.value="";purchaseName.value="";purchaseNote.value="";save()}
+moneyMonth.onchange=renderMoney;
+
+exportData.onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cosy-progress-club-backup.json";a.click();URL.revokeObjectURL(a.href)}
+importData.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();alert("Backup imported.");}catch{alert("That file could not be imported.")}};r.readAsText(f)}
+resetData.onclick=()=>{if(confirm("Reset all Cosy Progress Club data?")){data=structuredClone(initial);save()}}
+
+purchaseDate.value=todayKey();moneyMonth.value=currentMonth();taskTargetDate=todayKey();renderAll();
 </script>
 </body>
 </html>
