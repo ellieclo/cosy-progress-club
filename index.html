@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-title" content="Cosy Progress Club" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
-  <title>Cosy Progress Club v2.0</title>
-  <!-- Cosy Progress Club v2.0 -->
+  <title>Cosy Progress Club v2.1</title>
+  <!-- Cosy Progress Club v2.1 -->
   <style>
     :root{
       --rose:#a96b7d; --rose2:#dba4b3; --blush:#f7e8ed; --cream:#fffaf4;
@@ -92,7 +92,7 @@
     .day-chip strong{display:block;font-size:1rem}
     .tabs{
       position:fixed;bottom:0;left:0;right:0;z-index:40;
-      display:grid;grid-template-columns:repeat(6,1fr);
+      display:grid;grid-template-columns:repeat(7,1fr);
       background:rgba(255,253,249,.94);backdrop-filter:blur(16px);
       border-top:1px solid var(--line);padding:7px 6px calc(7px + env(safe-area-inset-bottom));
     }
@@ -135,7 +135,12 @@
     .focus-breakdown{display:grid;gap:8px}
     .focus-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
     .purchase-row{display:grid;grid-template-columns:90px 1fr auto auto;gap:8px;align-items:center}
+
     .month-total{font-size:1.6rem;font-weight:900}
+    .reading-card{display:grid;gap:8px}
+    .reading-meta{display:flex;gap:6px;flex-wrap:wrap}
+    .session-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:8px}
+
 
     .hidden{display:none!important}
     .empty{text-align:center;padding:22px;color:var(--muted)}
@@ -289,6 +294,33 @@
       <div id="purchaseList" class="stack"></div>
     </section>
 
+    <section id="reading" class="page">
+      <div class="section-title"><h3>Reading log</h3></div>
+      <div class="card stack">
+        <div class="grid2">
+          <div><label>Date</label><input id="readingDate" type="date"></div>
+          <div><label>Type</label><select id="readingType"><option>Scientific article</option><option>Book</option><option>Review article</option><option>Other</option></select></div>
+          <div><label>Purpose</label><select id="readingPurpose"><option>Work</option><option>Fun</option></select></div>
+          <div><label>Title</label><input id="readingTitle" placeholder="Article or book title"></div>
+        </div>
+        <div><label>Author, journal, or source (optional)</label><input id="readingSource" placeholder="e.g. Nature Metabolism"></div>
+        <div><label>Your thoughts</label><textarea id="readingThoughts" rows="5" placeholder="Main ideas, useful findings, questions, or your reaction"></textarea></div>
+        <button class="btn" id="addReading">Save reading entry</button>
+      </div>
+
+      <div class="section-title"><h3>Monthly reading</h3></div>
+      <div class="card stack">
+        <div><label>Month</label><input id="readingMonth" type="month"></div>
+        <div class="grid2">
+          <div class="metric"><span class="muted">Total read</span><strong id="readingMonthTotal">0</strong></div>
+          <div class="metric"><span class="muted">Work / Fun</span><strong id="readingPurposeTotal">0 / 0</strong></div>
+        </div>
+      </div>
+
+      <div class="section-title"><h3>Entries</h3></div>
+      <div id="readingList" class="stack"></div>
+    </section>
+
     <section id="summary" class="page">
       <div class="section-title"><h3>Your progress</h3></div>
       <div class="grid2">
@@ -297,10 +329,13 @@
         <div class="metric"><span class="muted">Cardio sessions</span><strong id="sumFitness">0</strong></div>
         <div class="metric"><span class="muted">Strength sessions</span><strong id="sumStrength">0</strong></div>
         <div class="metric"><span class="muted">Focus minutes</span><strong id="sumFocus">0</strong></div>
+        <div class="metric"><span class="muted">Read this month</span><strong id="sumReading">0</strong></div>
         <div class="metric"><span class="muted">This month spent</span><strong id="sumSpent">$0</strong></div>
       </div>
       <div class="section-title"><h3>Focus summary</h3></div>
       <div id="summaryFocusBreakdown" class="card focus-breakdown"></div>
+      <div class="section-title"><h3>Reading summary</h3></div>
+      <div id="summaryReadingBreakdown" class="card focus-breakdown"></div>
       <div class="section-title"><h3>Vanessa’s room & shop</h3></div>
       <div class="card stack">
         <p class="muted">Spend your coins on cosy items. Purchased items stay in Vanessa’s room.</p>
@@ -322,7 +357,8 @@
   <button class="tab" data-page="week"><span>🗓️</span>Week</button>
   <button class="tab" data-page="fitness"><span>🏃‍♀️</span>Fitness</button>
   <button class="tab" data-page="academic"><span>📚</span>Academic</button>
-  <button class="tab" data-page="money"><span>🫙</span>Money</button>
+  <button class="tab" data-page="reading"><span>📖</span>Reading</button>
+  <button class="tab" data-page="money"><span>💳</span>Money</button>
   <button class="tab" data-page="summary"><span>✨</span>Summary</button>
 </nav>
 
@@ -371,7 +407,7 @@ const scienceQuotes=[
 ];
 const initial={
   coins:0,tasks:{},dayTypes:{},cycle:{},agenda:{},fitness:[],strength:[],fitLevel:1,
-  projects:[],focus:[],purchases:[],owned:[],
+  projects:[],focus:[],purchases:[],readings:[],owned:[],
   shop:[
     {id:"plant",name:"Trailing houseplant",cost:12,icon:"🪴"},
     {id:"candle",name:"Vanilla candle",cost:10,icon:"🕯️"},
@@ -392,6 +428,7 @@ if(data.events){
 }
 if(!Array.isArray(data.strength))data.strength=[];
 if(!Array.isArray(data.purchases))data.purchases=[];
+if(!Array.isArray(data.readings))data.readings=[];
 data.projects=(data.projects||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[]}));
 
 let selectedDate=todayKey(),taskTargetDate=todayKey();
@@ -404,6 +441,8 @@ function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt
 function tasksFor(k){return data.tasks[k]||[]}
 function totalEffort(k){return tasksFor(k).reduce((a,t)=>a+weights[t.difficulty],0)}
 function doneEffort(k){return tasksFor(k).reduce((a,t)=>a+(t.done?weights[t.difficulty]:0),0)}
+function totalTasks(k){return tasksFor(k).length}
+function doneTasks(k){return tasksFor(k).filter(t=>t.done).length}
 
 function renderHeader(){
   coinCount.textContent=data.coins;
@@ -461,7 +500,7 @@ function renderWeek(){
   const start=sundayOf(parseLocal(todayKey()));let out="";
   for(let i=0;i<7;i++){
     const d=new Date(start);d.setDate(start.getDate()+i);const k=keyOf(d);
-    out+=`<button class="day-chip ${k===selectedDate?'active':''}" onclick="selectDay('${k}')">${d.toLocaleDateString(undefined,{weekday:'short'})}<strong>${d.getDate()}</strong><span>${doneEffort(k)}/${totalEffort(k)}</span></button>`;
+    out+=`<button class="day-chip ${k===selectedDate?'active':''}" onclick="selectDay('${k}')">${d.toLocaleDateString(undefined,{weekday:'short'})}<strong>${d.getDate()}</strong><span>${doneTasks(k)}/${totalTasks(k)}</span></button>`;
   }
   weekStrip.innerHTML=out;
   selectedDateTitle.textContent=fmtDate(selectedDate);
@@ -470,10 +509,18 @@ function renderWeek(){
 function renderFitness(){
   fitLevel.textContent=`Gentle Week ${data.fitLevel}`;
   const combined=[
-    ...data.fitness.map(x=>({...x,kind:"Cardio"})),
-    ...data.strength.map(x=>({...x,kind:"Strength"}))
-  ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);
-  fitnessList.innerHTML=combined.length?combined.map(x=>`<div class="card"><strong>${esc(x.kind)}: ${esc(x.type||x.name||"Session")}</strong> · ${x.duration} min<div class="muted">${fmtDate(x.date)}${x.hr?` · Avg HR ${x.hr}`:""}${x.zone?` · Zone 2 ${x.zone} min`:""}${x.feel?` · ${esc(x.feel)}`:""}${x.notes?` · ${esc(x.notes)}`:""}</div></div>`).join(""):`<div class="card empty">No sessions logged yet.</div>`;
+    ...data.fitness.map((x,i)=>({...x,kind:"Cardio",source:"fitness",sourceIndex:i})),
+    ...data.strength.map((x,i)=>({...x,kind:"Strength",source:"strength",sourceIndex:i}))
+  ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
+  fitnessList.innerHTML=combined.length?combined.map(x=>`
+    <div class="card">
+      <strong>${esc(x.kind)}: ${esc(x.type||x.name||"Session")}</strong> · ${x.duration} min
+      <div class="muted">${fmtDate(x.date)}${x.hr?` · Avg HR ${x.hr}`:""}${x.zone?` · Zone 2 ${x.zone} min`:""}${x.feel?` · ${esc(x.feel)}`:""}${x.notes?` · ${esc(x.notes)}`:""}</div>
+      <div class="session-actions">
+        <button class="btn ghost small" onclick="editFitnessSession('${x.source}',${x.sourceIndex})">Edit</button>
+        <button class="btn ghost small" onclick="deleteFitnessSession('${x.source}',${x.sourceIndex})">Delete</button>
+      </div>
+    </div>`).join(""):`<div class="card empty">No sessions logged yet.</div>`;
 }
 function renderAcademic(){
   projectList.innerHTML=data.projects.length?data.projects.map((p,i)=>`
@@ -511,6 +558,40 @@ function renderMoney(){
   categoryTotals.innerHTML=Object.keys(cats).length?Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="focus-row"><span>${esc(k)}</span><strong>$${v.toFixed(2)}</strong></div>`).join(""):`<div class="muted">No purchases in this month.</div>`;
   purchaseList.innerHTML=list.length?list.map(p=>{const i=data.purchases.indexOf(p);return `<div class="card purchase-row"><span>${fmtDate(p.date)}</span><div><strong>${esc(p.name)}</strong><div class="muted">${esc(p.category)}${p.note?` · ${esc(p.note)}`:""}</div></div><strong>$${Number(p.amount).toFixed(2)}</strong><button class="icon-btn" onclick="deletePurchase(${i})">×</button></div>`}).join(""):`<div class="card empty">No purchases recorded for this month.</div>`;
 }
+
+function renderReading(){
+  if(!readingDate.value)readingDate.value=todayKey();
+  if(!readingMonth.value)readingMonth.value=currentMonth();
+  const month=readingMonth.value;
+  const entries=data.readings.filter(r=>r.date.startsWith(month)).sort((a,b)=>b.date.localeCompare(a.date));
+  readingMonthTotal.textContent=entries.length;
+  const work=entries.filter(r=>r.purpose==="Work").length;
+  const fun=entries.filter(r=>r.purpose==="Fun").length;
+  readingPurposeTotal.textContent=`${work} / ${fun}`;
+  readingList.innerHTML=entries.length?entries.map(r=>{
+    const i=data.readings.indexOf(r);
+    return `<div class="card reading-card">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <strong>${esc(r.title)}</strong>
+        <div><button class="icon-btn" onclick="editReading(${i})">✎</button><button class="icon-btn" onclick="deleteReading(${i})">×</button></div>
+      </div>
+      <div class="reading-meta">
+        <span class="tag ${r.purpose==="Work"?"acad":"bonus"}">${esc(r.purpose)}</span>
+        <span class="tag">${esc(r.type)}</span>
+        <span class="tag">${fmtDate(r.date)}</span>
+      </div>
+      ${r.source?`<div class="muted">${esc(r.source)}</div>`:""}
+      <div>${esc(r.thoughts||"No notes added.")}</div>
+    </div>`;
+  }).join(""):`<div class="card empty">No reading entries for this month.</div>`;
+}
+function readingGroupsForMonth(month=currentMonth()){
+  const entries=data.readings.filter(r=>r.date.startsWith(month));
+  const counts={Work:0,Fun:0};
+  for(const r of entries)counts[r.purpose]=(counts[r.purpose]||0)+1;
+  return {entries,counts};
+}
+
 function renderSummary(){
   const all=Object.values(data.tasks).flat();
   sumGoals.textContent=all.filter(t=>t.done).length;
@@ -519,12 +600,18 @@ function renderSummary(){
   sumStrength.textContent=data.strength.length;
   sumFocus.textContent=data.focus.reduce((a,x)=>a+Number(x.minutes),0);
   const month=currentMonth();
+  const readingSummary=readingGroupsForMonth(month);
+  sumReading.textContent=readingSummary.entries.length;
+  summaryReadingBreakdown.innerHTML=readingSummary.entries.length
+    ? `<div class="focus-row"><span>Work reading</span><strong>${readingSummary.counts.Work||0}</strong></div>
+       <div class="focus-row"><span>Fun reading</span><strong>${readingSummary.counts.Fun||0}</strong></div>`
+    : `<div class="muted">No reading entries this month.</div>`;
   sumSpent.textContent="$"+data.purchases.filter(p=>p.date.startsWith(month)).reduce((a,p)=>a+Number(p.amount),0).toFixed(2);
   ownedItems.innerHTML=data.owned.length?`<p>${data.owned.map(id=>data.shop.find(x=>x.id===id)?.icon).join(" ")} <span class="muted">Vanessa’s room is getting cosier.</span></p>`:`<p class="muted">Vanessa’s room is waiting for its first item.</p>`;
   shopList.innerHTML=data.shop.map(x=>`<div class="shop-item"><div><span style="font-size:1.5rem">${x.icon}</span> <strong>${x.name}</strong></div>${data.owned.includes(x.id)?`<span class="tag ideal">Owned</span>`:`<button class="btn gold small" onclick="buyItem('${x.id}')">${x.cost} coins</button>`}</div>`).join("");
   renderFocusBreakdowns();
 }
-function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderMoney();renderSummary()}
+function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderReading();renderMoney();renderSummary()}
 
 window.toggleTask=(k,i)=>{const t=data.tasks[k][i];data.coins=Math.max(0,data.coins+(t.done?-weights[t.difficulty]:weights[t.difficulty]));t.done=!t.done;save()}
 window.deleteTask=(k,i)=>{data.tasks[k].splice(i,1);save()}
@@ -538,6 +625,53 @@ window.addSubtask=i=>{const n=prompt("Subtask name");if(n){data.projects[i].subt
 window.toggleSubtask=(i,si)=>{const s=data.projects[i].subtasks[si];s.done=!s.done;if(s.done)data.coins+=2;else data.coins=Math.max(0,data.coins-2);save()}
 window.deleteSubtask=(i,si)=>{data.projects[i].subtasks.splice(si,1);save()}
 window.deletePurchase=i=>{data.purchases.splice(i,1);save()}
+
+window.deleteFitnessSession=(source,i)=>{
+  const label=source==="strength"?"strength session":"cardio session";
+  if(confirm(`Delete this ${label}?`)){data[source].splice(i,1);save()}
+}
+window.editFitnessSession=(source,i)=>{
+  const x=data[source][i];
+  if(source==="strength"){
+    const name=prompt("Session name",x.name||"Strength session");
+    if(name===null)return;
+    const duration=prompt("Duration in minutes",x.duration);
+    if(duration===null)return;
+    const notes=prompt("Exercises or notes",x.notes||"");
+    if(notes===null)return;
+    x.name=name.trim()||"Strength session";
+    x.duration=Math.max(1,Number(duration)||x.duration);
+    x.notes=notes.trim();
+  }else{
+    const type=prompt("Cardio type",x.type||"Cardio");
+    if(type===null)return;
+    const duration=prompt("Duration in minutes",x.duration);
+    if(duration===null)return;
+    const hr=prompt("Average heart rate (optional)",x.hr||"");
+    if(hr===null)return;
+    const zone=prompt("Time in Zone 2 (optional)",x.zone||"");
+    if(zone===null)return;
+    x.type=type.trim()||"Cardio";
+    x.duration=Math.max(1,Number(duration)||x.duration);
+    x.hr=hr.trim();
+    x.zone=zone.trim();
+  }
+  save();
+}
+window.deleteReading=i=>{if(confirm("Delete this reading entry?")){data.readings.splice(i,1);save()}}
+window.editReading=i=>{
+  const r=data.readings[i];
+  const title=prompt("Title",r.title); if(title===null)return;
+  const source=prompt("Author, journal, or source",r.source||""); if(source===null)return;
+  const thoughts=prompt("Your thoughts",r.thoughts||""); if(thoughts===null)return;
+  const purpose=prompt("Purpose: Work or Fun",r.purpose); if(purpose===null)return;
+  r.title=title.trim()||r.title;
+  r.source=source.trim();
+  r.thoughts=thoughts.trim();
+  r.purpose=/^fun$/i.test(purpose.trim())?"Fun":"Work";
+  save();
+}
+
 window.buyItem=id=>{const x=data.shop.find(x=>x.id===id);if(data.coins>=x.cost){data.coins-=x.cost;data.owned.push(id);save()}else alert("You need a few more coins for that item.")}
 
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.page").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.page).classList.add("active")})
@@ -581,11 +715,37 @@ logFocus.onclick=()=>{const m=Number(focusMinutes.value),label=focusLabel.value.
 addPurchase.onclick=()=>{const amount=Number(purchaseAmount.value),name=purchaseName.value.trim();if(!(amount>=0)||!name){alert("Please enter a purchase name and amount.");return}data.purchases.push({date:purchaseDate.value||todayKey(),amount,category:purchaseCategory.value,name,note:purchaseNote.value.trim()});purchaseAmount.value="";purchaseName.value="";purchaseNote.value="";save()}
 moneyMonth.onchange=renderMoney;
 
+
+addReading.onclick=()=>{
+  const title=readingTitle.value.trim();
+  if(!title){alert("Please enter the title.");readingTitle.focus();return}
+  data.readings.push({
+    date:readingDate.value||todayKey(),
+    type:readingType.value,
+    purpose:readingPurpose.value,
+    title,
+    source:readingSource.value.trim(),
+    thoughts:readingThoughts.value.trim()
+  });
+  data.coins+=3;
+  readingTitle.value="";
+  readingSource.value="";
+  readingThoughts.value="";
+  save();
+}
+readingMonth.onchange=renderReading;
+
 exportData.onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cosy-progress-club-backup.json";a.click();URL.revokeObjectURL(a.href)}
 importData.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();alert("Backup imported.");}catch{alert("That file could not be imported.")}};r.readAsText(f)}
 resetData.onclick=()=>{if(confirm("Reset all Cosy Progress Club data?")){data=structuredClone(initial);save()}}
 
-purchaseDate.value=todayKey();moneyMonth.value=currentMonth();taskTargetDate=todayKey();renderAll();
+selectedDate=todayKey();
+taskTargetDate=todayKey();
+purchaseDate.value=todayKey();
+moneyMonth.value=currentMonth();
+readingDate.value=todayKey();
+readingMonth.value=currentMonth();
+renderAll();
 </script>
 </body>
 </html>
