@@ -46,14 +46,10 @@
     .hero h2{margin:0 0 5px;font-size:1.45rem}
     .hero p{margin:4px 0;color:var(--muted)}
     .vanessa-photo{
-  width:104px;
-  height:128px;
-  object-fit:cover;
-  border-radius:32px;
-  border:4px solid rgba(255,255,255,.85);
-  box-shadow:0 8px 18px rgba(74,48,57,.16);
-  display:block;
-}
+      width:104px;height:128px;object-fit:cover;border-radius:32px;
+      border:4px solid rgba(255,255,255,.85);
+      box-shadow:0 8px 18px rgba(74,48,57,.16);display:block;
+    }
     .progress-wrap{margin-top:12px}
     .progress{height:12px;background:#eadfe3;border-radius:999px;overflow:hidden}
     .progress > div{height:100%;background:linear-gradient(90deg,var(--rose2),var(--rose));width:0%;transition:.3s}
@@ -141,10 +137,11 @@
             <div class="progress"><div id="effortBar"></div></div>
           </div>
         </div>
-       <div style="text-align:center">
-  <img src="vanessa.png" alt="Vanessa" class="vanessa-photo">
-  <div class="muted" style="margin-top:5px;font-weight:800">Vanessa</div>
-</div>
+        <div style="text-align:center">
+          <img src="vanessa.png?v=3" alt="Vanessa" class="vanessa-photo">
+          <div class="muted" style="margin-top:5px;font-weight:800">Vanessa</div>
+        </div>
+      </div>
 
       <div class="section-title"><h3>Today’s setup</h3></div>
       <div class="card stack">
@@ -275,13 +272,13 @@
     </div>
     <div><label>Gentler alternative (optional)</label><input id="taskGentle" placeholder="e.g. 10-minute walk instead"></div>
   </div>
-  <div class="modal-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn" id="saveTask" value="default">Add</button></div>
+  <div class="modal-actions"><button class="btn ghost" id="cancelTask" type="button">Cancel</button><button class="btn" id="saveTask" type="button">Add</button></div>
 </form></dialog>
 
 <dialog id="eventDialog"><form method="dialog" class="modal">
   <h3>Add an agenda item</h3>
   <div class="stack"><div><label>Time</label><input id="eventTime" type="time"></div><div><label>Event</label><input id="eventName" placeholder="e.g. lab meeting"></div></div>
-  <div class="modal-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn" id="saveEvent" value="default">Add</button></div>
+  <div class="modal-actions"><button class="btn ghost" id="cancelEvent" type="button">Cancel</button><button class="btn" id="saveEvent" type="button">Add</button></div>
 </form></dialog>
 
 <script>
@@ -396,13 +393,51 @@ document.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>document.getEl
 document.getElementById("dayType").onchange=e=>{data.dayTypes[todayKey()]=e.target.value;save()}
 document.getElementById("cycleStatus").onchange=e=>{data.cycle[todayKey()]=e.target.value;save()}
 document.getElementById("weekDayType").onchange=e=>{data.dayTypes[selectedDate]=e.target.value;save()}
-document.getElementById("saveTask").onclick=e=>{
-  const name=document.getElementById("taskName").value.trim();if(!name){e.preventDefault();return}
-  const t={name,category:taskCategory.value,level:taskLevel.value,difficulty:Number(taskDifficulty.value),flexible:taskFlexible.value==="true",gentle:taskGentle.value.trim(),done:false};
-  data.tasks[taskTargetDate]=data.tasks[taskTargetDate]||[];data.tasks[taskTargetDate].push(t);
-  document.getElementById("taskForm").reset();save()
+document.getElementById("saveTask").onclick=()=>{
+  const nameEl=document.getElementById("taskName");
+  const name=nameEl.value.trim();
+  if(!name){
+    nameEl.focus();
+    nameEl.setCustomValidity("Please enter a goal.");
+    nameEl.reportValidity();
+    nameEl.setCustomValidity("");
+    return;
+  }
+  const t={
+    name,
+    category:document.getElementById("taskCategory").value,
+    level:document.getElementById("taskLevel").value,
+    difficulty:Number(document.getElementById("taskDifficulty").value),
+    flexible:document.getElementById("taskFlexible").value==="true",
+    gentle:document.getElementById("taskGentle").value.trim(),
+    done:false
+  };
+  data.tasks[taskTargetDate]=data.tasks[taskTargetDate]||[];
+  data.tasks[taskTargetDate].push(t);
+  document.getElementById("taskDialog").close();
+  document.getElementById("taskForm").reset();
+  save();
 }
-document.getElementById("saveEvent").onclick=()=>{let n=eventName.value.trim();if(!n)return;data.events[todayKey()]=data.events[todayKey()]||[];data.events[todayKey()].push({time:eventTime.value,name:n});eventName.value="";save()}
+document.getElementById("cancelTask").onclick=()=>{
+  document.getElementById("taskDialog").close();
+}
+document.getElementById("saveEvent").onclick=()=>{
+  const nameEl=document.getElementById("eventName");
+  const n=nameEl.value.trim();
+  if(!n){nameEl.focus();return;}
+  data.events[todayKey()]=data.events[todayKey()]||[];
+  data.events[todayKey()].push({
+    time:document.getElementById("eventTime").value,
+    name:n
+  });
+  document.getElementById("eventDialog").close();
+  document.getElementById("eventName").value="";
+  document.getElementById("eventTime").value="";
+  save();
+}
+document.getElementById("cancelEvent").onclick=()=>{
+  document.getElementById("eventDialog").close();
+}
 document.getElementById("addSelectedTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
 document.getElementById("addWeeklyTask").onclick=()=>{taskTargetDate=selectedDate;taskDialog.showModal()}
 document.getElementById("copyYesterday").onclick=()=>{let d=new Date(selectedDate+"T12:00:00");d.setDate(d.getDate()-1);let pk=keyOf(d);data.tasks[selectedDate]=(data.tasks[pk]||[]).map(t=>({...t,done:false}));save()}
