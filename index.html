@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-title" content="Cosy Progress Club" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
-  <title>Cosy Progress Club v2.2</title>
-  <!-- Cosy Progress Club v2.2 -->
+  <title>Cosy Progress Club v2.5</title>
+  <!-- Cosy Progress Club v2.5 -->
   <style>
     :root{
       --rose:#a96b7d; --rose2:#dba4b3; --blush:#f7e8ed; --cream:#fffaf4;
@@ -32,7 +32,7 @@
     }
     button,input,select,textarea{font:inherit}
     button{cursor:pointer}
-    .app{max-width:860px;margin:0 auto;padding:16px 14px 110px}
+    .app{max-width:860px;margin:0 auto;padding:16px 14px calc(150px + env(safe-area-inset-bottom))}
     .topbar{
       position:sticky;top:0;z-index:30;padding:calc(10px + env(safe-area-inset-top)) 0 10px;
       backdrop-filter:blur(14px); background:rgba(255,250,244,.78);
@@ -92,11 +92,18 @@
     .day-chip strong{display:block;font-size:1rem}
     .tabs{
       position:fixed;bottom:0;left:0;right:0;z-index:40;
-      display:grid;grid-template-columns:repeat(7,1fr);
-      background:rgba(255,253,249,.94);backdrop-filter:blur(16px);
-      border-top:1px solid var(--line);padding:7px 6px calc(7px + env(safe-area-inset-bottom));
+      display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);
+      overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
+      background:rgba(255,253,249,.96);backdrop-filter:blur(16px);
+      border-top:1px solid var(--line);
+      padding:7px 8px calc(9px + env(safe-area-inset-bottom));
+      box-shadow:0 -8px 24px rgba(84,58,66,.08);
     }
-    .tab{border:0;background:transparent;color:var(--muted);font-size:.68rem;padding:5px 2px}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{
+      border:0;background:transparent;color:var(--muted);
+      font-size:.68rem;padding:5px 3px;min-width:72px;white-space:nowrap
+    }
     .tab span{display:block;font-size:1.15rem}.tab.active{color:var(--rose);font-weight:900}
     .page{display:none}.page.active{display:block}
     .metric{padding:12px;border-radius:16px;background:#fff;border:1px solid var(--line)}
@@ -150,6 +157,46 @@
     .activity-bar{min-height:5px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--rose2),var(--rose));position:relative}
     .activity-bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.62rem;color:var(--muted);white-space:nowrap}
     .journey-message{padding:13px;border-radius:16px;background:linear-gradient(135deg,#f5e7ed,#edf2e9);border:1px solid var(--line)}
+    .page{scroll-margin-bottom:140px}
+    .task:last-child,.card:last-child{margin-bottom:8px}
+    .search-box{position:relative}
+    .search-box input{padding-left:40px}
+    .search-box::before{content:"⌕";position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.25rem;color:var(--muted);z-index:1}
+    .filter-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+    .filter-row::-webkit-scrollbar{display:none}
+    .filter-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-weight:800;white-space:nowrap;color:var(--muted)}
+    .filter-chip.active{background:var(--rose);color:#fff;border-color:var(--rose)}
+    .insight-controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+    .trend-chart{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;align-items:end;height:190px;padding:22px 4px 30px}
+    .trend-column{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;min-width:0}
+    .trend-value{font-size:.72rem;font-weight:900;color:var(--muted)}
+    .trend-bar-wrap{height:125px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+    .trend-bar{width:min(34px,76%);min-height:4px;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,var(--rose2),var(--rose));transition:.35s}
+    .trend-label{font-size:.68rem;color:var(--muted);white-space:nowrap}
+    .insight-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .insight-mini{padding:10px;border:1px solid var(--line);background:#fff;border-radius:14px;text-align:center}
+    .insight-mini strong{display:block;font-size:1.15rem}
+    .tag-cloud{display:flex;flex-wrap:wrap;gap:8px}
+    .tag-cloud button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:9px 11px;text-align:left}
+    .mood-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .mood-btn{border:1px solid var(--line);background:#fff;border-radius:16px;padding:10px 4px;text-align:center}
+    .mood-btn span{display:block;font-size:1.55rem}
+    .mood-btn small{display:block;margin-top:3px;color:var(--muted)}
+    .mood-btn.active{background:var(--blush);border-color:var(--rose2);box-shadow:0 0 0 2px rgba(169,107,125,.12)}
+    .mood-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+    .mood-day{aspect-ratio:1/1;border:1px solid var(--line);border-radius:12px;background:#fff;padding:5px;font-size:.72rem;display:flex;flex-direction:column;justify-content:space-between}
+    .mood-dot{width:12px;height:12px;border-radius:50%;margin-left:auto}
+    .mood-5{background:#68c65a}.mood-4{background:#a9d96f}.mood-3{background:#d9dce1}.mood-2{background:#a9b7e6}.mood-1{background:#b68ce8}
+    .mood-breakdown{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+    .mood-summary-card{padding:10px;border:1px solid var(--line);background:#fff;border-radius:14px;text-align:center}
+    .mood-summary-card span{display:block;font-size:1.45rem}
+    .mood-summary-card strong{display:block;font-size:1.05rem}
+    .tag-cloud small{display:block;color:var(--muted);margin-top:2px}
+    @media(max-width:520px){
+      .insight-controls{grid-template-columns:1fr}
+      .trend-chart{gap:5px}
+      .insight-summary{grid-template-columns:1fr 1fr 1fr}
+    }
     @media(max-width:520px){.journey-grid{grid-template-columns:repeat(2,1fr)}}
 
 
@@ -188,6 +235,23 @@
         </div>
       </div>
       <div class="quote-card"><strong>Vanessa says:</strong> <span id="scienceQuote"></span></div>
+
+      <div class="section-title"><h3>How are you feeling?</h3></div>
+      <div class="card stack">
+        <div class="mood-row" id="moodButtons">
+          <button class="mood-btn" data-mood="5"><span>😄</span><small>Great</small></button>
+          <button class="mood-btn" data-mood="4"><span>🙂</span><small>Good</small></button>
+          <button class="mood-btn" data-mood="3"><span>😐</span><small>Neutral</small></button>
+          <button class="mood-btn" data-mood="2"><span>🙁</span><small>Low</small></button>
+          <button class="mood-btn" data-mood="1"><span>😣</span><small>Rough</small></button>
+        </div>
+        <div class="grid2">
+          <div><label>Optional note</label><input id="moodNote" placeholder="What is affecting your mood?"></div>
+          <div><label>Time</label><input id="moodTime" type="time"></div>
+        </div>
+        <button class="btn" id="saveMood">Save mood check-in</button>
+        <div class="muted" id="todayMoodSummary"></div>
+      </div>
 
       <div class="section-title"><h3>Today’s setup</h3></div>
       <div class="card stack">
@@ -329,11 +393,69 @@
         </div>
       </div>
 
-      <div class="section-title"><h3>Entries</h3></div>
+      <div class="section-title"><h3>Reading library</h3></div>
+      <div class="card stack">
+        <div class="search-box"><input id="readingSearch" placeholder="Search titles, sources, or your thoughts"></div>
+        <div class="filter-row" id="readingPurposeFilters">
+          <button class="filter-chip active" data-reading-purpose="All">All</button>
+          <button class="filter-chip" data-reading-purpose="Work">Work</button>
+          <button class="filter-chip" data-reading-purpose="Fun">Fun</button>
+        </div>
+        <div class="filter-row" id="readingTypeFilters">
+          <button class="filter-chip active" data-reading-type="All">All types</button>
+          <button class="filter-chip" data-reading-type="Scientific article">Scientific articles</button>
+          <button class="filter-chip" data-reading-type="Review article">Reviews</button>
+          <button class="filter-chip" data-reading-type="Book">Books</button>
+          <button class="filter-chip" data-reading-type="Other">Other</button>
+        </div>
+        <div class="muted" id="readingSearchCount"></div>
+      </div>
       <div id="readingList" class="stack"></div>
     </section>
 
     <section id="summary" class="page">
+      <div class="section-title"><h3>Mood insights</h3></div>
+      <div class="card stack">
+        <div class="grid2">
+          <div><label>Month</label><input id="moodMonth" type="month"></div>
+          <div><label>View</label><select id="moodView"><option value="average">Daily average</option><option value="latest">Latest mood each day</option></select></div>
+        </div>
+        <div class="mood-breakdown" id="moodBreakdown"></div>
+        <div class="mood-calendar" id="moodCalendar"></div>
+        <div class="journey-message" id="moodInsightMessage"></div>
+      </div>
+
+      <div class="section-title"><h3>Monthly insights</h3></div>
+      <div class="card stack">
+        <div class="insight-controls">
+          <div><label>Trend</label><select id="insightMetric">
+            <option value="effort">Effort points</option>
+            <option value="goals">Goals completed</option>
+            <option value="focus">Focus minutes</option>
+            <option value="exercise">Exercise sessions</option>
+            <option value="reading">Reading entries</option>
+            <option value="spending">Spending</option>
+          </select></div>
+          <div><label>Range</label><select id="insightRange">
+            <option value="6">Last 6 months</option>
+            <option value="12">Last 12 months</option>
+          </select></div>
+        </div>
+        <div class="insight-summary">
+          <div class="insight-mini"><span class="muted">Current month</span><strong id="insightCurrent">0</strong></div>
+          <div class="insight-mini"><span class="muted">Best month</span><strong id="insightBest">0</strong></div>
+          <div class="insight-mini"><span class="muted">Monthly average</span><strong id="insightAverage">0</strong></div>
+        </div>
+        <div class="trend-chart" id="monthlyTrendChart"></div>
+        <div class="journey-message" id="insightMessage"></div>
+      </div>
+
+      <div class="section-title"><h3>Reading themes</h3></div>
+      <div class="card stack">
+        <p class="muted">Common words from your reading titles and sources. Tap one to search your Reading library.</p>
+        <div id="readingTagCloud" class="tag-cloud"></div>
+      </div>
+
       <div class="section-title"><h3>Progress journey</h3></div>
       <div class="card stack">
         <div class="journey-grid">
@@ -405,7 +527,7 @@
       <div><label>Goal level</label><select id="taskLevel"><option>Essential</option><option>Ideal</option><option>Bonus</option></select></div>
       <div><label>Difficulty</label><select id="taskDifficulty"><option value="1">1 — Tiny</option><option value="2">2 — Light</option><option value="3">3 — Moderate</option><option value="4">4 — Challenging</option><option value="5">5 — Major</option></select></div>
       <div><label>Flexible?</label><select id="taskFlexible"><option value="true">Yes, can move</option><option value="false">No, date-specific</option></select></div>
-      <div><label>Repeat for consecutive days</label><input id="taskRepeat" type="number" min="1" max="30" value="1"></div>
+      <div><label>Repeat for additional days</label><input id="taskRepeat" type="number" min="0" max="29" value="0"><div class="muted" style="margin-top:4px">0 = today only</div></div>
     </div>
     <div><label>Gentler alternative (optional)</label><input id="taskGentle" placeholder="e.g. 10-minute walk instead"></div>
   </div>
@@ -431,17 +553,14 @@ const parseLocal=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-
 const todayKey=()=>localKey(new Date());
 const weights={1:1,2:2,3:4,4:7,5:10};
 const scienceQuotes=[
-  "Progress is data: notice it, record it, and build from it.",
-  "Small repeated actions are how complex systems change.",
-  "A difficult day is still one point in a much larger dataset.",
-  "Recovery is part of adaptation, not the opposite of progress.",
-  "Curiosity turns uncertainty into the next useful experiment.",
-  "Consistency matters more than a perfectly controlled day.",
-  "Your future results are being shaped by today’s small inputs."
+  {text:"Do your best. But like it! Like what you do; then you will do your best.",author:"Katherine Johnson"},
+  {text:"It was like a new world opened to me, the world of science.",author:"Marie Curie"},
+  {text:"Every scientist dreams of doing something that can help the world.",author:"Tu Youyou"},
+  {text:"There will always, always be mathematics. Everything is physics and math.",author:"Katherine Johnson"}
 ];
 const initial={
   coins:0,tasks:{},dayTypes:{},cycle:{},agenda:{},fitness:[],strength:[],fitLevel:1,
-  projects:[],focus:[],purchases:[],readings:[],owned:[],
+  projects:[],focus:[],purchases:[],readings:[],moods:[],owned:[],
   shop:[
     {id:"plant",name:"Trailing houseplant",cost:12,icon:"🪴"},
     {id:"candle",name:"Vanilla candle",cost:10,icon:"🕯️"},
@@ -463,9 +582,12 @@ if(data.events){
 if(!Array.isArray(data.strength))data.strength=[];
 if(!Array.isArray(data.purchases))data.purchases=[];
 if(!Array.isArray(data.readings))data.readings=[];
+if(!Array.isArray(data.moods))data.moods=[];
 data.projects=(data.projects||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[]}));
 
 let selectedDate=todayKey(),taskTargetDate=todayKey();
+let readingPurposeFilter="All",readingTypeFilter="All",readingSearchTerm="";
+let selectedMood=null;
 
 function save(){localStorage.setItem("cpcData",JSON.stringify(data));renderAll()}
 function fmtDate(k){return parseLocal(k).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}
@@ -488,7 +610,8 @@ function renderHeader(){
   effortText.textContent=`${done} of ${total} effort points`;
   effortBar.style.width=(total?done/total*100:0)+"%";
   const dayNum=Math.floor(parseLocal(todayKey()).getTime()/86400000);
-  scienceQuote.textContent=scienceQuotes[Math.abs(dayNum)%scienceQuotes.length];
+  const quote=scienceQuotes[Math.abs(dayNum)%scienceQuotes.length];
+  scienceQuote.textContent=`“${quote.text}” — ${quote.author}`;
 }
 function taskHTML(t,k,i){
   const cat=t.category.toLowerCase();
@@ -597,11 +720,24 @@ function renderReading(){
   if(!readingDate.value)readingDate.value=todayKey();
   if(!readingMonth.value)readingMonth.value=currentMonth();
   const month=readingMonth.value;
-  const entries=data.readings.filter(r=>r.date.startsWith(month)).sort((a,b)=>b.date.localeCompare(a.date));
-  readingMonthTotal.textContent=entries.length;
-  const work=entries.filter(r=>r.purpose==="Work").length;
-  const fun=entries.filter(r=>r.purpose==="Fun").length;
+  const monthEntries=data.readings.filter(r=>r.date.startsWith(month)).sort((a,b)=>b.date.localeCompare(a.date));
+  readingMonthTotal.textContent=monthEntries.length;
+  const work=monthEntries.filter(r=>r.purpose==="Work").length;
+  const fun=monthEntries.filter(r=>r.purpose==="Fun").length;
   readingPurposeTotal.textContent=`${work} / ${fun}`;
+
+  const q=readingSearchTerm.trim().toLowerCase();
+  const entries=data.readings
+    .filter(r=>readingPurposeFilter==="All"||r.purpose===readingPurposeFilter)
+    .filter(r=>readingTypeFilter==="All"||r.type===readingTypeFilter)
+    .filter(r=>{
+      if(!q)return true;
+      return [r.title,r.source,r.thoughts,r.type,r.purpose]
+        .some(v=>String(v||"").toLowerCase().includes(q));
+    })
+    .sort((a,b)=>b.date.localeCompare(a.date));
+
+  readingSearchCount.textContent=`${entries.length} entr${entries.length===1?"y":"ies"} found`;
   readingList.innerHTML=entries.length?entries.map(r=>{
     const i=data.readings.indexOf(r);
     return `<div class="card reading-card">
@@ -617,7 +753,7 @@ function renderReading(){
       ${r.source?`<div class="muted">${esc(r.source)}</div>`:""}
       <div>${esc(r.thoughts||"No notes added.")}</div>
     </div>`;
-  }).join(""):`<div class="card empty">No reading entries for this month.</div>`;
+  }).join(""):`<div class="card empty">No reading entries match this search.</div>`;
 }
 function readingGroupsForMonth(month=currentMonth()){
   const entries=data.readings.filter(r=>r.date.startsWith(month));
@@ -691,6 +827,202 @@ function totalLifetimePoints(){
   points+=(data.readings||[]).length*3;
   return points;
 }
+
+
+function moodLabel(value){
+  return {5:"Great",4:"Good",3:"Neutral",2:"Low",1:"Rough"}[value]||"";
+}
+function moodEmoji(value){
+  return {5:"😄",4:"🙂",3:"😐",2:"🙁",1:"😣"}[value]||"";
+}
+function moodEntriesForDate(date){
+  return (data.moods||[]).filter(m=>m.date===date);
+}
+function renderTodayMood(){
+  const entries=moodEntriesForDate(todayKey());
+  if(!entries.length){
+    todayMoodSummary.textContent="No mood check-ins yet today.";
+    return;
+  }
+  const avg=entries.reduce((a,m)=>a+Number(m.value),0)/entries.length;
+  const latest=entries.slice().sort((a,b)=>(a.time||"").localeCompare(b.time||"")).at(-1);
+  todayMoodSummary.textContent=`${entries.length} check-in${entries.length===1?"":"s"} today · latest ${moodEmoji(latest.value)} ${moodLabel(latest.value)} · average ${avg.toFixed(1)}/5`;
+}
+function monthDays(month){
+  const [y,m]=month.split("-").map(Number);
+  return new Date(y,m,0).getDate();
+}
+function monthStartWeekday(month){
+  const [y,m]=month.split("-").map(Number);
+  return new Date(y,m-1,1).getDay();
+}
+function renderMoodInsights(){
+  if(!moodMonth.value)moodMonth.value=currentMonth();
+  const month=moodMonth.value;
+  const entries=(data.moods||[]).filter(m=>m.date.startsWith(month));
+  const counts={1:0,2:0,3:0,4:0,5:0};
+  for(const m of entries)counts[m.value]=(counts[m.value]||0)+1;
+  moodBreakdown.innerHTML=[5,4,3,2,1].map(v=>`
+    <div class="mood-summary-card">
+      <span>${moodEmoji(v)}</span>
+      <strong>${counts[v]||0}</strong>
+      <small>${moodLabel(v)}</small>
+    </div>`).join("");
+
+  const days=monthDays(month);
+  const offset=monthStartWeekday(month);
+  const cells=[];
+  for(let i=0;i<offset;i++)cells.push('<div></div>');
+  for(let d=1;d<=days;d++){
+    const date=`${month}-${String(d).padStart(2,"0")}`;
+    const dayEntries=(data.moods||[]).filter(m=>m.date===date);
+    let value=null;
+    if(dayEntries.length){
+      if(moodView.value==="latest"){
+        value=Number(dayEntries.slice().sort((a,b)=>(a.time||"").localeCompare(b.time||"")).at(-1).value);
+      }else{
+        value=Math.round(dayEntries.reduce((a,m)=>a+Number(m.value),0)/dayEntries.length);
+      }
+    }
+    const title=dayEntries.length
+      ? `${fmtDate(date)}: ${dayEntries.length} check-in${dayEntries.length===1?"":"s"}`
+      : fmtDate(date);
+    cells.push(`<div class="mood-day" title="${title}">
+      <span>${d}</span>
+      ${value?`<div class="mood-dot mood-${value}"></div>`:""}
+    </div>`);
+  }
+  moodCalendar.innerHTML=cells.join("");
+
+  if(!entries.length){
+    moodInsightMessage.textContent="No mood check-ins recorded for this month yet.";
+  }else{
+    const avg=entries.reduce((a,m)=>a+Number(m.value),0)/entries.length;
+    moodInsightMessage.textContent=`Average mood this month: ${avg.toFixed(1)}/5 across ${entries.length} check-in${entries.length===1?"":"s"}.`;
+  }
+}
+
+function monthKeys(count){
+  const result=[];
+  const now=parseLocal(todayKey());
+  now.setDate(1);
+  for(let i=count-1;i>=0;i--){
+    const d=new Date(now);
+    d.setMonth(now.getMonth()-i);
+    result.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);
+  }
+  return result;
+}
+function monthLabel(key){
+  const [y,m]=key.split("-").map(Number);
+  return new Date(y,m-1,1).toLocaleDateString(undefined,{month:"short",year:"2-digit"});
+}
+function monthlyMetricValue(month,metric){
+  if(metric==="goals"){
+    let total=0;
+    for(const [date,tasks] of Object.entries(data.tasks||{})){
+      if(date.startsWith(month))total+=tasks.filter(t=>t.done).length;
+    }
+    return total;
+  }
+  if(metric==="effort"){
+    let total=0;
+    for(const [date,tasks] of Object.entries(data.tasks||{})){
+      if(date.startsWith(month)){
+        total+=tasks.reduce((a,t)=>a+(t.done?(weights[t.difficulty]||0):0),0);
+      }
+    }
+    return total;
+  }
+  if(metric==="focus"){
+    return (data.focus||[]).filter(x=>x.date?.startsWith(month)).reduce((a,x)=>a+Number(x.minutes||0),0);
+  }
+  if(metric==="exercise"){
+    return (data.fitness||[]).filter(x=>x.date?.startsWith(month)).length+
+           (data.strength||[]).filter(x=>x.date?.startsWith(month)).length;
+  }
+  if(metric==="reading"){
+    return (data.readings||[]).filter(x=>x.date?.startsWith(month)).length;
+  }
+  if(metric==="spending"){
+    return (data.purchases||[]).filter(x=>x.date?.startsWith(month)).reduce((a,x)=>a+Number(x.amount||0),0);
+  }
+  return 0;
+}
+function metricFormat(value,metric){
+  if(metric==="spending")return `$${Number(value).toFixed(value>=100?0:2)}`;
+  if(metric==="focus")return `${Math.round(value)}m`;
+  return String(Math.round(value));
+}
+function metricName(metric){
+  return {
+    effort:"effort points",goals:"completed goals",focus:"focus minutes",
+    exercise:"exercise sessions",reading:"reading entries",spending:"spending"
+  }[metric]||metric;
+}
+function renderInsights(){
+  const metric=insightMetric.value||"effort";
+  const count=Number(insightRange.value||6);
+  const months=monthKeys(count);
+  const values=months.map(m=>monthlyMetricValue(m,metric));
+  const max=Math.max(1,...values);
+  const current=values.at(-1)||0;
+  const best=Math.max(0,...values);
+  const average=values.reduce((a,b)=>a+b,0)/values.length;
+
+  insightCurrent.textContent=metricFormat(current,metric);
+  insightBest.textContent=metricFormat(best,metric);
+  insightAverage.textContent=metricFormat(average,metric);
+
+  monthlyTrendChart.style.gridTemplateColumns=`repeat(${count},1fr)`;
+  monthlyTrendChart.innerHTML=months.map((m,i)=>{
+    const v=values[i];
+    const height=v?Math.max(7,(v/max)*125):4;
+    return `<div class="trend-column" title="${monthLabel(m)}: ${metricFormat(v,metric)}">
+      <div class="trend-value">${metricFormat(v,metric)}</div>
+      <div class="trend-bar-wrap"><div class="trend-bar" style="height:${height}px;opacity:${v?1:.18}"></div></div>
+      <div class="trend-label">${monthLabel(m)}</div>
+    </div>`;
+  }).join("");
+
+  const previous=values.length>1?values.at(-2):0;
+  let message=`You recorded ${metricFormat(current,metric)} in ${metricName(metric)} this month.`;
+  if(current>previous&&previous>0)message=`This month is ahead of last month for ${metricName(metric)}.`;
+  else if(current===0)message=`There is no ${metricName(metric)} recorded for this month yet.`;
+  else if(current<previous)message=`This month is currently below last month for ${metricName(metric)}—and the month is still in progress.`;
+  insightMessage.textContent=message;
+
+  renderReadingTagCloud();
+}
+function readingKeywords(){
+  const stop=new Set(["the","and","for","with","from","this","that","into","about","your","article","book","review","study","using","effects","effect","role","new","how","what","why","are","was","were","has","have"]);
+  const counts={};
+  for(const r of data.readings||[]){
+    const text=`${r.title||""} ${r.source||""}`.toLowerCase();
+    const words=text.match(/[a-z][a-z-]{2,}/g)||[];
+    for(const w of words){
+      if(stop.has(w))continue;
+      counts[w]=(counts[w]||0)+1;
+    }
+  }
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,12);
+}
+function renderReadingTagCloud(){
+  const tags=readingKeywords();
+  readingTagCloud.innerHTML=tags.length?tags.map(([word,count])=>
+    `<button onclick="searchReadingTag('${word.replace(/'/g,"\\'")}')"><strong>${esc(word)}</strong><small>${count} mention${count===1?"":"s"}</small></button>`
+  ).join(""):`<div class="muted">Reading themes will appear as you add more titles and sources.</div>`;
+}
+window.searchReadingTag=word=>{
+  readingSearchTerm=word;
+  readingSearch.value=word;
+  document.querySelectorAll(".tab,.page").forEach(x=>x.classList.remove("active"));
+  const tab=document.querySelector('.tab[data-page="reading"]');
+  tab.classList.add("active");
+  document.getElementById("reading").classList.add("active");
+  renderReading();
+}
+
 function renderJourney(){
   const dates=activityDates();
   const stats=streakStats(dates);
@@ -750,7 +1082,7 @@ function renderSummary(){
   shopList.innerHTML=data.shop.map(x=>`<div class="shop-item"><div><span style="font-size:1.5rem">${x.icon}</span> <strong>${x.name}</strong></div>${data.owned.includes(x.id)?`<span class="tag ideal">Owned</span>`:`<button class="btn gold small" onclick="buyItem('${x.id}')">${x.cost} coins</button>`}</div>`).join("");
   renderFocusBreakdowns();
 }
-function renderAll(){renderHeader();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderReading();renderMoney();renderSummary();renderJourney()}
+function renderAll(){renderHeader();renderTodayMood();renderTasks();renderAgenda();renderWeek();renderFitness();renderAcademic();renderReading();renderMoney();renderSummary();renderMoodInsights();renderJourney();renderInsights()}
 
 window.toggleTask=(k,i)=>{const t=data.tasks[k][i];data.coins=Math.max(0,data.coins+(t.done?-weights[t.difficulty]:weights[t.difficulty]));t.done=!t.done;save()}
 window.deleteTask=(k,i)=>{data.tasks[k].splice(i,1);save()}
@@ -822,14 +1154,14 @@ weekDayType.onchange=e=>{data.dayTypes[selectedDate]=e.target.value;save()}
 saveTask.addEventListener("click",e=>{
   e.preventDefault();e.stopPropagation();
   const name=taskName.value.trim();if(!name){alert("Please enter a goal.");taskName.focus();return}
-  const repeat=Math.max(1,Math.min(30,Number(taskRepeat.value)||1));
-  for(let r=0;r<repeat;r++){
+  const additionalDays=Math.max(0,Math.min(29,Number(taskRepeat.value)||0));
+  for(let r=0;r<=additionalDays;r++){
     const d=parseLocal(taskTargetDate);d.setDate(d.getDate()+r);const k=keyOf(d);
     data.tasks[k]=data.tasks[k]||[];
     data.tasks[k].push({name,category:taskCategory.value,level:taskLevel.value,difficulty:Number(taskDifficulty.value),flexible:taskFlexible.value==="true",gentle:taskGentle.value.trim(),done:false});
   }
   taskDialog.close();
-  taskName.value="";taskCategory.value="Academic";taskLevel.value="Essential";taskDifficulty.value="1";taskFlexible.value="true";taskGentle.value="";taskRepeat.value="1";
+  taskName.value="";taskCategory.value="Academic";taskLevel.value="Essential";taskDifficulty.value="1";taskFlexible.value="true";taskGentle.value="";taskRepeat.value="0";
   save();
 });
 cancelTask.onclick=e=>{e.preventDefault();taskDialog.close()}
@@ -854,6 +1186,43 @@ logFocus.onclick=()=>{const m=Number(focusMinutes.value),label=focusLabel.value.
 addPurchase.onclick=()=>{const amount=Number(purchaseAmount.value),name=purchaseName.value.trim();if(!(amount>=0)||!name){alert("Please enter a purchase name and amount.");return}data.purchases.push({date:purchaseDate.value||todayKey(),amount,category:purchaseCategory.value,name,note:purchaseNote.value.trim()});purchaseAmount.value="";purchaseName.value="";purchaseNote.value="";save()}
 moneyMonth.onchange=renderMoney;
 
+
+
+
+document.querySelectorAll("[data-mood]").forEach(btn=>btn.addEventListener("click",()=>{
+  selectedMood=Number(btn.dataset.mood);
+  document.querySelectorAll("[data-mood]").forEach(x=>x.classList.toggle("active",x===btn));
+}));
+saveMood.onclick=()=>{
+  if(!selectedMood){alert("Choose how you are feeling first.");return}
+  data.moods.push({
+    date:todayKey(),
+    time:moodTime.value||new Date().toTimeString().slice(0,5),
+    value:selectedMood,
+    note:moodNote.value.trim()
+  });
+  selectedMood=null;
+  document.querySelectorAll("[data-mood]").forEach(x=>x.classList.remove("active"));
+  moodNote.value="";
+  moodTime.value=new Date().toTimeString().slice(0,5);
+  save();
+};
+moodMonth.onchange=renderMoodInsights;
+moodView.onchange=renderMoodInsights;
+
+readingSearch.addEventListener("input",e=>{readingSearchTerm=e.target.value;renderReading()});
+document.querySelectorAll("[data-reading-purpose]").forEach(btn=>btn.addEventListener("click",()=>{
+  readingPurposeFilter=btn.dataset.readingPurpose;
+  document.querySelectorAll("[data-reading-purpose]").forEach(x=>x.classList.toggle("active",x===btn));
+  renderReading();
+}));
+document.querySelectorAll("[data-reading-type]").forEach(btn=>btn.addEventListener("click",()=>{
+  readingTypeFilter=btn.dataset.readingType;
+  document.querySelectorAll("[data-reading-type]").forEach(x=>x.classList.toggle("active",x===btn));
+  renderReading();
+}));
+insightMetric.onchange=renderInsights;
+insightRange.onchange=renderInsights;
 
 addReading.onclick=()=>{
   const title=readingTitle.value.trim();
@@ -884,6 +1253,8 @@ purchaseDate.value=todayKey();
 moneyMonth.value=currentMonth();
 readingDate.value=todayKey();
 readingMonth.value=currentMonth();
+moodTime.value=new Date().toTimeString().slice(0,5);
+moodMonth.value=currentMonth();
 renderAll();
 </script>
 </body>
